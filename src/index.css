@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-turquoise: #40E0D0;
+  --color-brand-purple: #8A2BE2;
+  --color-brand-royalblue: #4169E1;
+  --color-brand-teal: #008080;
+  
+  /* Fitstreet Colors */
+  --color-fs-dark: #0A0A0A;
+  --color-fs-orange: #FF6B2C;
+  --color-fs-pink: #FF2D78;
+  --color-fs-cyan: #00E5FF;
+  --color-fs-lime: #A8FF00;
+  --color-fs-purple: #B44AFF;
+  --color-fs-yellow: #FFD600;
+
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-heading: "Montserrat", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased overflow-x-hidden;
+    font-family: var(--font-body);
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-black tracking-tighter;
+    font-family: var(--font-heading);
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-slate-900/80 backdrop-blur-xl border border-white/10;
+  }
+
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-turquoise via-brand-royalblue to-brand-purple;
+  }
+
+  .gradient-text-fs {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-fs-orange via-fs-pink to-fs-purple;
+  }
+
+  .pill-button {
+    @apply rounded-full px-8 py-4 font-black uppercase tracking-widest transition-all duration-500 hover:-translate-y-1 hover:shadow-2xl active:scale-95;
+  }
+
+  .card-shine {
+    @apply relative overflow-hidden;
+  }
+
+  .card-shine::after {
+    content: "";
+    @apply absolute -top-1/2 -left-1/2 w-[200%] h-[200%] pointer-events-none transition-all duration-1000 opacity-0;
+    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transform: rotate(45deg);
+  }
+
+  .card-shine:hover::after {
+    @apply top-full left-full opacity-100;
+  }
+
+  .noise-bg {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+    mask-image: radial-gradient(circle at center, black, transparent);
+  }
+
+  .fs-shadow {
+    box-shadow: 0 0 40px -10px var(--color-fs-cyan);
+  }
+
+  .fs-shadow-orange {
+    box-shadow: 0 0 40px -10px var(--color-fs-orange);
+  }
+}
