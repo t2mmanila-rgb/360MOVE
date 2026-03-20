@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Clock, Zap, ChevronRight, Share2, Ticket, Sparkles, Map } from 'lucide-react';
+import { MapPin, Zap, ChevronRight, Share2, Ticket, Sparkles, Map } from 'lucide-react';
 import { MOCK_SCHEDULE, type Activity } from '../data/activities';
 import Onboarding from '../components/Onboarding';
 import { useNavigate, Link } from 'react-router-dom';
@@ -143,9 +143,9 @@ const FitstreetEvent: React.FC = () => {
                   <UniversalCard 
                     variant="dark"
                     title={act.title}
-                    category={act.location}
+                    category={act.location || 'BGC'}
                     duration={act.time}
-                    image={act.image || ''}
+                    image={act.image || '/activities/rope_flow_premium.png'}
                     ctaText="Secure Spot"
                     onClick={() => setShowOnboarding(true)}
                   />

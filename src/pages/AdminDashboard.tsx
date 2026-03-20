@@ -212,7 +212,7 @@ const AdminDashboard: React.FC = () => {
                   {[
                     { name: 'S. Nandwani', email: 'sonaal@wellness.com', interests: 'Mindfulness', city: 'Makati' },
                     { name: 'Coach Will', email: 'will@fitstreet.ph', interests: 'High-Octane', city: 'Taguig' }
-                  ].map((mock, i) => (
+                  ].map((mock, _) => (
                     <tr key={mock.name} className="bg-white border border-slate-100 rounded-[2rem] opacity-40">
                       <td className="py-6 pl-6 rounded-l-[1.5rem]">
                         <div className="flex items-center gap-4">

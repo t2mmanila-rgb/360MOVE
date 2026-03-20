@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, MapPin, Zap, ChevronRight, Calendar, ArrowLeft } from 'lucide-react';
+import { Clock, MapPin, Zap, Calendar, ArrowLeft } from 'lucide-react';
 import { MOCK_SCHEDULE } from '../data/activities';
 import { useNavigate } from 'react-router-dom';
 import MobileFooter from '../components/MobileFooter';
