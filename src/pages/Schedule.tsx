@@ -6,7 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import MobileFooter from '../components/MobileFooter';
 
 const Schedule: React.FC = () => {
-  const [activeDay, setActiveDay] = useState('May 9');
+  const [activeDay, setActiveDay] = useState(() => {
+    const now = new Date();
+    const eventDay2 = new Date('2026-05-10T00:00:00');
+    return now >= eventDay2 ? 'May 10' : 'May 9';
+  });
   const navigate = useNavigate();
 
   const dayEvents = MOCK_SCHEDULE.filter(event => 

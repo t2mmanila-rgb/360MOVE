@@ -130,7 +130,8 @@ export const syncUserProfileToSheet = async (profile: any) => {
       totalPoints: profile.points || 1,
       agreeTC: profile.agreePrivacy || false,
       agreePrivacy: profile.agreePrivacy || false,
-      signupDate: profile.signupDate || new Date().toISOString()
+      signupDate: profile.signupDate || new Date().toISOString(),
+      vipRequested: profile.vipRequested || false
     };
 
     const response = await fetch(scriptUrl, {

@@ -1,8 +1,26 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Calendar, QrCode, Gift, User } from 'lucide-react';
+import { Home, Calendar, QrCode, Gift, User, Star } from 'lucide-react';
 
 const MobileFooter: React.FC = () => {
+  const [isVip, setIsVip] = useState(false);
+
+  useEffect(() => {
+    const checkVip = () => {
+      try {
+        const stored = localStorage.getItem('user_profile');
+        if (stored) {
+          const profile = JSON.parse(stored);
+          setIsVip(!!profile.vipRequested || !!profile.isVIP);
+        }
+      } catch (e) {}
+    };
+    checkVip();
+    // Optional: listen to storage events if needed, but polling/re-render is often enough for simple navs
+    window.addEventListener('storage', checkVip);
+    return () => window.removeEventListener('storage', checkVip);
+  }, []);
+
   return (
     <div className="fixed bottom-0 left-0 right-0 z-[60] md:hidden px-6 pb-8 pointer-events-none">
       <div className="max-w-md mx-auto relative pointer-events-auto">
@@ -19,7 +37,7 @@ const MobileFooter: React.FC = () => {
           </NavLink>
 
           <NavLink 
-            to="/events/fitstreet-2026" 
+            to="/events/fitstreet-2026/schedule" 
             className={({ isActive }) => `flex flex-col items-center gap-1.5 flex-1 py-3 transition-all duration-500 rounded-2xl ${isActive ? 'text-fs-cyan scale-110' : 'text-slate-400 hover:text-white'}`}
           >
             <Calendar className="w-5 h-5" />
@@ -28,25 +46,25 @@ const MobileFooter: React.FC = () => {
 
           <div className="flex-1 flex justify-center -mt-16 relative">
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-24 bg-fs-orange/20 rounded-full blur-2xl animate-pulse -z-10" />
-            <button className="w-20 h-20 bg-fs-orange rounded-[2.5rem] flex items-center justify-center shadow-[0_15px_35px_rgba(249,115,22,0.4)] hover:scale-110 active:scale-90 transition-all text-white border-[6px] border-[#0a0f1a] group">
+            <NavLink to="/scanner" className="w-20 h-20 bg-fs-orange rounded-[2.5rem] flex items-center justify-center shadow-[0_15px_35px_rgba(249,115,22,0.4)] hover:scale-110 active:scale-90 transition-all text-white border-[6px] border-[#0a0f1a] group">
               <QrCode className="w-8 h-8 group-hover:rotate-12 transition-transform" />
-            </button>
+            </NavLink>
           </div>
 
           <NavLink 
             to="/rewards" 
             className={({ isActive }) => `flex flex-col items-center gap-1.5 flex-1 py-3 transition-all duration-500 rounded-2xl ${isActive ? 'text-fs-cyan scale-110' : 'text-slate-400 hover:text-white'}`}
           >
-            <Gift className="w-5 h-5" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Win</span>
+            {isVip ? <Star className="w-5 h-5 text-fs-orange fill-fs-orange" /> : <Gift className="w-5 h-5" />}
+            <span className="text-[8px] font-black uppercase tracking-[0.2em]">{isVip ? 'VIP' : 'Win'}</span>
           </NavLink>
 
           <NavLink 
-            to="/my-pass" 
+            to="/my-pass?profile=true" 
             className={({ isActive }) => `flex flex-col items-center gap-1.5 flex-1 py-3 transition-all duration-500 rounded-2xl ${isActive ? 'text-fs-cyan scale-110' : 'text-slate-400 hover:text-white'}`}
           >
             <User className="w-5 h-5" />
-            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Pass</span>
+            <span className="text-[8px] font-black uppercase tracking-[0.2em]">Profile</span>
           </NavLink>
         </div>
       </div>

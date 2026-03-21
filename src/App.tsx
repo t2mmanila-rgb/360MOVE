@@ -14,6 +14,8 @@ import Rewards from './pages/Rewards';
 import AdminDashboard from './pages/AdminDashboard';
 import Register from './pages/Register';
 import Schedule from './pages/Schedule';
+import ScannerPage from './pages/ScannerPage';
+import VIPUpgradeModal from './components/VIPUpgradeModal';
 
 const App: React.FC = () => {
   return (
@@ -35,10 +37,12 @@ const App: React.FC = () => {
             <Route path="/rewards" element={<Rewards />} />
             <Route path="/admin-t2m" element={<AdminDashboard />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/scanner" element={<ScannerPage />} />
             <Route path="*" element={<Home />} />
           </Routes>
         </main>
         <Footer />
+        <VIPUpgradeModal />
       </div>
     </Router>
   );

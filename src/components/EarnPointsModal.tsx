@@ -245,9 +245,14 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
 
               <button 
                 onClick={handleSubmit}
-                className="w-full py-5 bg-fs-cyan text-slate-900 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-fs-cyan/20"
+                disabled={formData.workSetup === 'Corporate' && !formData.companyName.trim()}
+                className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl transition-all ${
+                  formData.workSetup === 'Corporate' && !formData.companyName.trim()
+                    ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                    : 'bg-fs-cyan text-slate-900 shadow-fs-cyan/20 active:scale-95'
+                }`}
               >
-                Submit Profile <Check className="w-5 h-5 border-2 border-slate-900 rounded-full p-0.5" />
+                Submit Profile <Check className={`w-5 h-5 border-2 rounded-full p-0.5 ${formData.workSetup === 'Corporate' && !formData.companyName.trim() ? 'border-slate-500' : 'border-slate-900'}`} />
               </button>
             </motion.div>
           )}

@@ -5,9 +5,8 @@ import { B2B_PASSPORT_BRANDS, MOCK_SCHEDULE } from '../data/activities';
 import type { Activity, PassportBrand } from '../data/activities';
 import { resolveDriveImageUrl, logRegistrationToSheet, syncUserProfileToSheet, fetchGoogleSheetData, PASSPORT_CHALLENGE_SHEET_ID } from '../lib/google-sheets';
 import MobileFooter from '../components/MobileFooter';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import EarnPointsModal from '../components/EarnPointsModal';
-import Scanner from '../components/Scanner';
 import { cn } from '../lib/utils';
 
 type ViewMode = 'dashboard' | 'passport';
@@ -19,7 +18,6 @@ const MyPass: React.FC = () => {
   const [view, setView] = React.useState<ViewMode>('dashboard');
   const [activeZone, setActiveZone] = React.useState<string>('THE ARENA');
   const [selectedItem, setSelectedItem] = React.useState<Activity | PassportBrand | null>(null);
-  const [showScanner, setShowScanner] = React.useState(false);
   const [showEarnPointsModal, setShowEarnPointsModal] = React.useState(false);
   const [showProfileModal, setShowProfileModal] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
@@ -40,6 +38,26 @@ const MyPass: React.FC = () => {
     if (savedRegistered) setRegisteredActivityIds(JSON.parse(savedRegistered));
   }, []);
 
+  const location = useLocation();
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('profile') === 'true') {
+      setShowProfileModal(true);
+      navigate('/my-pass', { replace: true });
+    }
+  }, [location.search, navigate]);
+
+  // Handle external scan redirect
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const scanId = params.get('scan');
+    if (scanId && brands.length > 0 && userProfile) {
+      handleScanSuccess(scanId);
+      navigate('/my-pass', { replace: true });
+    }
+  }, [location.search, brands, userProfile, navigate]);
+
   // Sync with Spreadsheet for Passport Challenge Details
   React.useEffect(() => {
     const syncBrands = async () => {
@@ -49,14 +67,23 @@ const MyPass: React.FC = () => {
       if (remoteData && remoteData.length > 0) {
         // Merge remote data with existing brands
         const updatedBrands = B2B_PASSPORT_BRANDS.map(localBrand => {
-          const remoteBrand = remoteData.find((r: any) => r.id === localBrand.id || r.name === localBrand.name);
+          const remoteBrand = remoteData.find((r: any) => {
+            const rName = r['Brand Name'] || r.name || r.Brand || '';
+            const normalizedRName = rName.toLowerCase();
+            const normalizedLocalName = localBrand.name.toLowerCase();
+            return r.id === localBrand.id || 
+                   (rName && (normalizedRName.includes(normalizedLocalName) || normalizedLocalName.includes(normalizedRName))) ||
+                   (rName.includes("G'Ballers") && localBrand.id === 'pb-gballers') ||
+                   (rName.includes("Viking Games") && localBrand.id === 'pb-viking');
+          });
+          
           if (remoteBrand) {
             return {
               ...localBrand,
-              description: remoteBrand.description || localBrand.description,
-              mechanics: remoteBrand.mechanics || localBrand.mechanics,
-              booth: remoteBrand.booth || localBrand.booth,
-              category: remoteBrand.category || localBrand.category
+              description: remoteBrand['Description'] || remoteBrand.description || localBrand.description,
+              mechanics: remoteBrand['Mechanics'] || remoteBrand.mechanics || localBrand.mechanics,
+              booth: remoteBrand['Booth'] || remoteBrand.booth || localBrand.booth,
+              category: remoteBrand['Category'] || remoteBrand.category || localBrand.category
             };
           }
           return localBrand;
@@ -92,16 +119,12 @@ const MyPass: React.FC = () => {
     localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
   };
 
-  const handleScanQR = (_brandId?: string) => {
-    setShowScanner(true);
-  };
-
   const handleScanSuccess = (decodedTextValue: string) => {
     // In a real app, decodedTextValue would contain the brand ID or a secure token
     // For this simulation, we'll mark the first uncompleted brand as completed
     const brandId = decodedTextValue; // Assuming decodedTextValue is the brand ID
     const brand = brands.find(b => b.id === brandId);
-    if (brand) {
+    if (brand && !completedIds.includes(brand.id)) {
       const newCompleted = [...completedIds, brand.id];
       setCompletedIds(newCompleted);
       localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
@@ -115,7 +138,6 @@ const MyPass: React.FC = () => {
         timestamp: new Date().toISOString()
       });
       
-      setShowScanner(false);
       setView('passport'); // Auto-return to passport challenge
       
       const isPaid = brand.id === 'pb-gballers' || brand.id === 'pb-viking';
@@ -136,15 +158,18 @@ const MyPass: React.FC = () => {
   };
 
   const calculatePoints = () => {
-    // Standard brand scan is now 1 point. G'Ballers and Viking are 10 points.
+    // Standard brand scan is now 1 point. G'Ballers and Viking are 10 points ONLY if paid.
+    // The "paidActivities" array should be populated by syncing with the payment sheet.
     const passportPoints = completedIds.reduce((total, id) => {
-      const isPaid = id === 'pb-gballers' || id === 'pb-viking';
-      return total + (isPaid ? 10 : 1);
+      const isPaidContent = id === 'pb-gballers' || id === 'pb-viking';
+      const hasPaid = userProfile?.paidActivities?.includes(id) || false;
+      return total + (isPaidContent ? (hasPaid ? 10 : 0) : 1);
     }, 0);
 
     const registrationPoints = registeredActivityIds.reduce((total, id) => {
-      const isPaid = id === 'gballers-free' || id === 'viking-games-sat';
-      return total + (isPaid ? 10 : 5);
+      const isPaidContent = id === 'gballers-free' || id === 'viking-games-sat';
+      const hasPaid = userProfile?.paidActivities?.includes(id) || false;
+      return total + (isPaidContent ? (hasPaid ? 10 : 0) : 5);
     }, 0);
 
     const profilePoints = (userProfile?.profileCompleted ? 1 : 0);
@@ -248,8 +273,7 @@ const MyPass: React.FC = () => {
               {'logo' in selectedItem ? (
                 <button 
                   onClick={() => {
-                    handleScanQR(selectedItem.id);
-                    setSelectedItem(null);
+                    navigate('/scanner');
                   }}
                   className="w-full py-5 bg-fs-orange text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-fs-orange/20 active:scale-95 transition-all"
                 >
@@ -284,13 +308,7 @@ const MyPass: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-fs-cyan/30 pb-32 relative">
-      {/* QR Scanner Modal */}
-      {showScanner && (
-        <Scanner 
-          onScanSuccess={handleScanSuccess} 
-          onClose={() => setShowScanner(false)} 
-        />
-      )}
+
 
       {/* Mobile Header */}
       <section className="pt-28 px-6 pb-4">
@@ -450,7 +468,7 @@ const MyPass: React.FC = () => {
                    <div className="h-0.5 bg-white/5 flex-grow rounded-full" />
                  </div>
 
-                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                 <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                    {/* Brands in this Zone - Active by Default */}
                    {brands.filter(b => b.zone === zone).map(brand => (
                      <motion.div 

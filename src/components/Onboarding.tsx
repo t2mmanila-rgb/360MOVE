@@ -64,7 +64,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
       <motion.div 
         initial={{ opacity: 0, scale: 0.9, y: 30 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="relative w-full max-w-xl bg-white/5 border border-white/10 rounded-[4rem] p-10 md:p-16 overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.5)]"
+        className="relative w-full max-w-xl max-h-[90vh] overflow-y-auto bg-white/5 border border-white/10 rounded-[4rem] p-10 md:p-16 shadow-[0_40px_100px_rgba(0,0,0,0.5)]"
       >
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-fs-orange/10 rounded-full blur-[100px] -z-10 animate-pulse-slow" />
         

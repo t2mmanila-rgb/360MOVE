@@ -13,6 +13,7 @@ const FitstreetEvent: React.FC = () => {
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
+    window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
     navigate('/my-pass');
   };
 
