@@ -9,9 +9,10 @@ interface EarnPointsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onComplete: (profile: any) => void;
+  storageKey?: string;
 }
 
-const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onComplete }) => {
+const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onComplete, storageKey = 'user_profile' }) => {
   const [step, setStep] = useState(1);
   const [showSharePopup, setShowSharePopup] = useState(false);
   const [formData, setFormData] = useState({
@@ -31,7 +32,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
   const nextStep = () => setStep(s => s + 1);
 
   const handleSubmit = () => {
-    const savedProfile = localStorage.getItem('user_profile');
+    const savedProfile = localStorage.getItem(storageKey);
     const profile = savedProfile ? JSON.parse(savedProfile) : {};
     
     const updatedProfile = {
@@ -42,7 +43,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
       points: (profile.points || 0) + 1 // Add 1 point for profile completion
     };
     
-    localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
+    localStorage.setItem(storageKey, JSON.stringify(updatedProfile));
     
     if (formData.workSetup === 'Corporate') {
       onComplete(updatedProfile);
@@ -60,7 +61,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
       url: 'https://360corp.vercel.app/corporate-offers'
     };
 
-    const savedProfile = localStorage.getItem('user_profile');
+    const savedProfile = localStorage.getItem(storageKey);
     const profile = savedProfile ? JSON.parse(savedProfile) : {};
 
     try {
@@ -75,7 +76,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
         pointsHRShare: (profile.pointsHRShare || 0) + 1,
         points: (profile.points || 0) + 1
       };
-      localStorage.setItem('user_profile', JSON.stringify(updated));
+      localStorage.setItem(storageKey, JSON.stringify(updated));
       onComplete(updated);
       setShowSharePopup(false);
       onClose();

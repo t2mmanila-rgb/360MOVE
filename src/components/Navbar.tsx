@@ -13,10 +13,15 @@ const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [genericUser, setGenericUser] = useState<any>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('user_profile');
     if (saved) setUserProfile(JSON.parse(saved));
+    
+    const savedGeneric = localStorage.getItem('generic_user_profile');
+    if (savedGeneric) setGenericUser(JSON.parse(savedGeneric));
+    
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -108,11 +113,11 @@ const Navbar: React.FC = () => {
               </button>
             ) : (
               <Link 
-                to={userProfile ? "/my-pass" : "/register"} 
+                to={genericUser ? "/dashboard" : "/register"} 
                 className="pill-button bg-brand-purple text-white hover:bg-brand-royalblue px-6 py-1.5 flex flex-col items-center justify-center leading-tight transition-all"
               >
-                <span className="font-bold text-sm tracking-wide">{userProfile ? "My Pass" : "Let's Move!"}</span>
-                {!userProfile && <span className="text-[9px] font-medium opacity-80 uppercase tracking-widest mt-0.5">Sign up today.</span>}
+                <span className="font-bold text-sm tracking-wide">{genericUser ? "Dashboard" : "Let's Move!"}</span>
+                {!genericUser && <span className="text-[9px] font-medium opacity-80 uppercase tracking-widest mt-0.5">Sign up today.</span>}
               </Link>
             )}
           </div>

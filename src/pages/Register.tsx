@@ -45,10 +45,10 @@ const Register: React.FC = () => {
       categories: formData.interests, // Map interests to categories for MyPass.tsx compatibility
       personalized: true // Mark as personalized since we are skipping the onboarding/interest steps for now
     };
-    localStorage.setItem('user_profile', JSON.stringify(finalData));
-    localStorage.setItem('is_logged_in', 'true');
-    // Navigate to My Pass
-    navigate('/my-pass');
+    localStorage.setItem('generic_user_profile', JSON.stringify(finalData));
+    localStorage.setItem('is_generic_logged_in', 'true');
+    // Navigate to Member Dashboard
+    navigate('/dashboard');
   };
 
   return (
@@ -69,7 +69,7 @@ const Register: React.FC = () => {
             <img src="/logos/360MOVE Logo.png" alt="360MOVE" className="h-20 w-auto brightness-0 invert mb-8" />
             <h1 className="text-6xl font-black text-white leading-tight uppercase italic tracking-tighter">
               The Future of <br />
-              <span className="text-fs-cyan">Wellness</span> starts <br />
+              <span className="text-fs-cyan">Movement</span> starts <br />
               with <span className="text-fs-orange">You.</span>
             </h1>
           </div>
@@ -85,7 +85,7 @@ const Register: React.FC = () => {
               </div>
             </div>
             <div className="pt-8 border-t border-white/10 flex items-center gap-12 text-white/40 font-black italic uppercase tracking-widest text-sm">
-              <span>Fitstreet 2026</span>
+              <span>360MOVE Membership</span>
               <span>BGC Manila</span>
               <span>360MOVE</span>
             </div>
@@ -139,7 +139,7 @@ const Register: React.FC = () => {
                 className="space-y-8"
               >
                 <div className="space-y-2">
-                  <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Get Your Pass. Let's Move!</h2>
+                  <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Join the Movement</h2>
                   <p className="text-slate-500 font-medium">Elevate your wellness journey in Metro Manila.</p>
                 </div>
 
@@ -192,7 +192,7 @@ const Register: React.FC = () => {
                   disabled={!formData.name || !formData.email}
                   className="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black uppercase italic tracking-widest flex items-center justify-center gap-3 hover:bg-slate-800 transition-all group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Get Your Pass
+                  Join the Movement
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
               </motion.div>
@@ -260,7 +260,7 @@ const Register: React.FC = () => {
                 
                 <div className="space-y-2">
                   <h2 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Welcome to the Movement</h2>
-                  <p className="text-slate-500 font-medium">Your digital passport is now active.</p>
+                  <p className="text-slate-500 font-medium">Your 360MOVE membership is now active.</p>
                 </div>
 
                 <div className="p-8 bg-slate-50 rounded-[3rem] space-y-4">
@@ -283,7 +283,7 @@ const Register: React.FC = () => {
                   onClick={handleSubmit}
                   className="w-full bg-slate-900 text-white py-5 rounded-[2rem] font-black uppercase italic tracking-widest flex items-center justify-center gap-3 hover:scale-[1.02] transition-all shadow-2xl shadow-slate-900/20"
                 >
-                  Enter "My Pass" Dashboard
+                  Enter Member Dashboard
                   <ArrowRight className="w-5 h-5" />
                 </button>
               </motion.div>

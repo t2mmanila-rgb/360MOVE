@@ -12,6 +12,7 @@ import RequestProposal from './pages/RequestProposal';
 import MyPass from './pages/MyPass';
 import Rewards from './pages/Rewards';
 import AdminDashboard from './pages/AdminDashboard';
+import GenericDashboard from './pages/GenericDashboard';
 import Register from './pages/Register';
 import Schedule from './pages/Schedule';
 import ScannerPage from './pages/ScannerPage';
@@ -36,6 +37,7 @@ const App: React.FC = () => {
              <Route path="/my-pass" element={<MyPass />} />
             <Route path="/rewards" element={<Rewards />} />
             <Route path="/admin-t2m" element={<AdminDashboard />} />
+            <Route path="/dashboard" element={<GenericDashboard />} />
             <Route path="/register" element={<Register />} />
             <Route path="/scanner" element={<ScannerPage />} />
             <Route path="*" element={<Home />} />
