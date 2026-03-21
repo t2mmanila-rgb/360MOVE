@@ -27,6 +27,10 @@ const VIPUpgradeModal: React.FC = () => {
     };
 
     checkAndShow();
+
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-vip-modal', handleOpen);
+    return () => window.removeEventListener('open-vip-modal', handleOpen);
   }, []);
 
   const handleUpgrade = async () => {
@@ -91,7 +95,12 @@ const VIPUpgradeModal: React.FC = () => {
                 <Star className="w-10 h-10 text-white fill-white" />
               </div>
               
-              <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-2 text-white">Upgrade to <span className="text-fs-orange">VIP.</span></h2>
+              <h2 className="text-4xl font-black italic uppercase tracking-tighter mb-4 text-white">Upgrade to <span className="text-fs-orange">VIP.</span></h2>
+              <div className="flex justify-center mb-6">
+                <span className="bg-fs-cyan text-slate-900 px-6 py-2 rounded-full font-black text-xl italic tracking-widest shadow-lg shadow-fs-cyan/20 border-2 border-slate-900">
+                  P1,500
+                </span>
+              </div>
               <p className="text-slate-400 text-sm mb-8 font-medium">Elevate your Fitstreet Heatwave experience entirely.</p>
               
               <div className="space-y-4 mb-8 text-left">

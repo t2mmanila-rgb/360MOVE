@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, MapPin, Info, ArrowRight, Zap, Star, User } from 'lucide-react';
+import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, MapPin, Info, ArrowRight, Zap, Star, User, Clock } from 'lucide-react';
 import { B2B_PASSPORT_BRANDS, MOCK_SCHEDULE } from '../data/activities';
 import type { Activity, PassportBrand } from '../data/activities';
 import { resolveDriveImageUrl, logRegistrationToSheet, syncUserProfileToSheet, fetchGoogleSheetData, PASSPORT_CHALLENGE_SHEET_ID } from '../lib/google-sheets';
@@ -23,6 +23,8 @@ const MyPass: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [successActivity, setSuccessActivity] = React.useState<Activity | null>(null);
   const [brands, setBrands] = React.useState<PassportBrand[]>(B2B_PASSPORT_BRANDS);
+  const [activities, setActivities] = React.useState<Activity[]>(MOCK_SCHEDULE);
+  const [isExpanded, setIsExpanded] = React.useState(false);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -89,6 +91,28 @@ const MyPass: React.FC = () => {
           return localBrand;
         });
         setBrands(updatedBrands);
+
+        // Also merge remote data with existing activities (like Viking Games)
+        const updatedActivities = MOCK_SCHEDULE.map(localAct => {
+          const remoteAct = remoteData.find((r: any) => {
+            const rName = r['Brand Name'] || r.name || r.Brand || '';
+            const normalizedRName = rName.toLowerCase();
+            const normalizedLocalName = localAct.title.toLowerCase();
+            return (rName && (normalizedRName.includes(normalizedLocalName) || normalizedLocalName.includes(normalizedRName))) ||
+                   (rName.includes("G'Ballers") && localAct.id === 'gballers-free') ||
+                   (rName.includes("Viking Games") && localAct.id === 'viking-games-sat');
+          });
+          
+          if (remoteAct) {
+            return {
+              ...localAct,
+              description: remoteAct['Description'] || remoteAct.description || localAct.description,
+              mechanics: remoteAct['Mechanics'] || remoteAct.mechanics || localAct.mechanics,
+            };
+          }
+          return localAct;
+        });
+        setActivities(updatedActivities);
       }
     };
     syncBrands();
@@ -167,9 +191,8 @@ const MyPass: React.FC = () => {
     }, 0);
 
     const registrationPoints = registeredActivityIds.reduce((total, id) => {
-      const isPaidContent = id === 'gballers-free' || id === 'viking-games-sat';
-      const hasPaid = userProfile?.paidActivities?.includes(id) || false;
-      return total + (isPaidContent ? (hasPaid ? 10 : 0) : 5);
+      // Points should only be given once the user registers physically on site (QR scan)
+      return total + 0;
     }, 0);
 
     const profilePoints = (userProfile?.profileCompleted ? 1 : 0);
@@ -191,7 +214,7 @@ const MyPass: React.FC = () => {
   const userInterests = userProfile?.categories || userProfile?.interests || [];
 
   const recommendedActivities = React.useMemo(() => {
-    const all = [...MOCK_SCHEDULE];
+    const all = [...activities];
     if (!userInterests.length) return all.slice(0, 3);
     return all.filter(act => 
       userInterests.some((interest: string) => 
@@ -211,52 +234,104 @@ const MyPass: React.FC = () => {
             initial={{ opacity: 0, scale: 0.9, y: 100 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 100 }}
-            className="w-full max-w-lg bg-slate-800 border border-white/10 rounded-[2.5rem] overflow-hidden shadow-2xl"
+            className="w-full max-w-lg max-h-[90vh] scrollbar-hide bg-slate-800 border border-white/10 rounded-[2.5rem] shadow-2xl relative overflow-y-auto flex flex-col"
           >
-            <div className="relative h-72">
+            {/* Sticky Header */}
+            <div className="sticky top-0 z-50 w-full flex justify-between px-6 pt-6 pb-2 -mb-[80px] pointer-events-none">
+              <button 
+                onClick={() => setSelectedItem(null)}
+                className="px-4 py-2 rounded-full bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors gap-2 text-xs font-bold pointer-events-auto shadow-xl"
+              >
+                <ArrowRight className="w-4 h-4 rotate-180" /> <span className="hidden sm:inline">Go Back</span>
+              </button>
+              <button 
+                onClick={() => setSelectedItem(null)}
+                className="w-10 h-10 rounded-full bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors pointer-events-auto shadow-xl"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="relative h-72 shrink-0">
                <img 
                  src={'logo' in selectedItem ? resolveDriveImageUrl(selectedItem.logo) : (selectedItem as Activity).image} 
                  className="w-full h-full object-cover" 
                  alt={'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title} 
                />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent" />
-              <button 
-                onClick={() => setSelectedItem(null)}
-                className="absolute top-6 left-6 px-4 py-2 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white z-10 hover:bg-black/70 transition-colors gap-2 text-xs font-bold"
-              >
-                <ArrowRight className="w-4 h-4 rotate-180" /> Go Back
-              </button>
-              <button 
-                onClick={() => setSelectedItem(null)}
-                className="absolute top-6 right-6 w-10 h-10 rounded-full bg-black/50 backdrop-blur-md flex items-center justify-center text-white z-10 hover:bg-black/70 transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-transparent to-transparent" />
             </div>
             <div className="p-8">
               <div className="flex items-center gap-2 mb-4">
                 <span className="px-3 py-1 rounded-full bg-fs-cyan/20 text-fs-cyan text-[10px] font-black uppercase tracking-widest leading-none">
-                  {selectedItem.zone}
+                  {selectedItem.zone || 'FITSTREET'}
                 </span>
                 <span className="px-3 py-1 rounded-full bg-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">
                   {selectedItem.category}
                 </span>
               </div>
+
+              {registeredActivityIds.includes(selectedItem.id) && (
+                <div className="flex flex-col gap-2 mb-6 p-4 rounded-xl bg-fs-cyan/10 border border-fs-cyan/20">
+                  <div className="flex items-center gap-2 text-fs-cyan text-[10px] font-black uppercase tracking-widest leading-none mb-1">
+                    <CheckCircle2 className="w-4 h-4" /> Activated in Passport
+                  </div>
+                  {(selectedItem as Activity).day && (
+                    <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                      <Calendar className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).day}
+                    </div>
+                  )}
+                  {((selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)) && (
+                    <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                      <Clock className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)}
+                    </div>
+                  )}
+                  {((selectedItem as Activity).location || (selectedItem as PassportBrand).booth) && (
+                    <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                      <MapPin className="w-3.5 h-3.5 text-fs-orange" /> {(selectedItem as Activity).location || (selectedItem as PassportBrand).booth}
+                    </div>
+                  )}
+                </div>
+              )}
               <h3 className="text-3xl font-black italic mb-6 tracking-tight uppercase leading-tight">
                 {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
               </h3>
-              <p className="text-slate-400 text-sm mb-8 leading-relaxed">
-                {selectedItem.description}
-              </p>
               
-              <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/5">
+              <div className="mb-8">
                 <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Info className="w-4 h-4" /> Challenge Mechanics
+                  <Info className="w-4 h-4" /> About {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
                 </h3>
-                <p className="text-white text-sm font-medium leading-relaxed italic">
-                  {selectedItem.mechanics}
-                </p>
+                <div className="relative">
+                  <p className={`text-slate-400 text-sm leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                    {selectedItem.description}
+                  </p>
+                  {!isExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-800 to-transparent pointer-events-none" />
+                  )}
+                </div>
               </div>
+              
+              <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/5 relative">
+                <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <Zap className="w-4 h-4" /> Challenge Mechanics
+                </h3>
+                <div className="relative">
+                  <p className={`text-white text-sm font-medium leading-relaxed italic ${!isExpanded ? 'line-clamp-3' : ''}`}>
+                    {selectedItem.mechanics}
+                  </p>
+                  {!isExpanded && (
+                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#243347] to-transparent pointer-events-none" />
+                  )}
+                </div>
+              </div>
+
+              {((selectedItem.description?.length || 0) > 100 || (selectedItem.mechanics?.length || 0) > 100) && (
+                <button 
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="w-full py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors text-xs mb-8 flex items-center justify-center gap-2"
+                >
+                  {isExpanded ? 'Show Less' : 'Read More Details'}
+                </button>
+              )}
 
               {(selectedItem.id === 'pb-gballers' || selectedItem.id === 'pb-viking' || selectedItem.id === 'gballers-free' || selectedItem.id === 'viking-games-sat') && (
                 <div className="bg-fs-orange/10 rounded-2xl p-6 mb-8 border border-fs-orange/20">
@@ -474,7 +549,7 @@ const MyPass: React.FC = () => {
                      <motion.div 
                        key={brand.id}
                        whileTap={{ scale: 0.95 }}
-                       onClick={() => setSelectedItem(brand)}
+                       onClick={() => { setSelectedItem(brand); setIsExpanded(false); }}
                        className={`relative aspect-square rounded-[3rem] border transition-all duration-500 overflow-hidden flex flex-col items-center justify-center p-6 cursor-pointer ${
                          completedIds.includes(brand.id) 
                            ? 'bg-white/10 border-fs-cyan/50 shadow-[0_0_40px_rgba(45,212,191,0.15)]' 
@@ -505,10 +580,10 @@ const MyPass: React.FC = () => {
                    ))}
 
                    {/* Activity Item (Inactive/Active) */}
-                    {MOCK_SCHEDULE.filter(act => act.zone === zone).map(activity => (
+                    {activities.filter(act => act.zone === zone).map(activity => (
                       <div 
                         key={activity.id} 
-                        onClick={() => setSelectedItem(activity)}
+                        onClick={() => { setSelectedItem(activity); setIsExpanded(false); }}
                         className="relative aspect-square rounded-[3rem] overflow-hidden group border-2 border-white/5 hover:border-slate-500 transition-all shadow-2xl cursor-pointer"
                       >
                         <img 
@@ -668,6 +743,15 @@ const MyPass: React.FC = () => {
                   className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-white/10 transition-colors"
                 >
                   Close Profile
+                </button>
+                <button 
+                  onClick={() => {
+                    localStorage.clear();
+                    window.location.href = '/';
+                  }}
+                  className="w-full py-4 bg-red-500/10 border border-red-500/30 text-red-500 rounded-2xl font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors"
+                >
+                  Clear Data & Start Over
                 </button>
               </div>
             </motion.div>

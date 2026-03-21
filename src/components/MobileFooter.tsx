@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Home, Calendar, QrCode, Gift, User, Star } from 'lucide-react';
+import { Home, Calendar, QrCode, User, Star } from 'lucide-react';
 
 const MobileFooter: React.FC = () => {
   const [isVip, setIsVip] = useState(false);
@@ -51,13 +51,16 @@ const MobileFooter: React.FC = () => {
             </NavLink>
           </div>
 
-          <NavLink 
-            to="/rewards" 
-            className={({ isActive }) => `flex flex-col items-center gap-1.5 flex-1 py-3 transition-all duration-500 rounded-2xl ${isActive ? 'text-fs-cyan scale-110' : 'text-slate-400 hover:text-white'}`}
+          <button 
+            onClick={(e) => {
+              e.preventDefault();
+              window.dispatchEvent(new Event('open-vip-modal'));
+            }}
+            className={`flex flex-col items-center gap-1.5 flex-1 py-3 transition-all duration-500 rounded-2xl text-slate-400 hover:text-white cursor-pointer`}
           >
-            {isVip ? <Star className="w-5 h-5 text-fs-orange fill-fs-orange" /> : <Gift className="w-5 h-5" />}
-            <span className="text-[8px] font-black uppercase tracking-[0.2em]">{isVip ? 'VIP' : 'Win'}</span>
-          </NavLink>
+            {isVip ? <Star className="w-5 h-5 text-fs-orange fill-fs-orange" /> : <Star className="w-5 h-5" />}
+            <span className="text-[8px] font-black uppercase tracking-[0.2em]">VIP</span>
+          </button>
 
           <NavLink 
             to="/my-pass?profile=true" 

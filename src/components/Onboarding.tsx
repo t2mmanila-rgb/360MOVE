@@ -70,7 +70,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
         
         <button 
           onClick={onClose}
-          className="absolute top-10 right-10 text-slate-500 hover:text-white transition-all hover:rotate-90 duration-300"
+          className="absolute top-8 right-8 text-slate-500 hover:text-white transition-all hover:rotate-90 duration-300 z-50 p-2"
         >
           <X className="w-8 h-8" />
         </button>
