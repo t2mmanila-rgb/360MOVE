@@ -9,28 +9,44 @@ const VIPUpgradeModal: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   useEffect(() => {
-    const checkAndShow = () => {
+    const handleOpen = () => setIsOpen(true);
+    window.addEventListener('open-vip-modal', handleOpen);
+
+    const interval = setInterval(() => {
       try {
         const stored = localStorage.getItem('user_profile');
         const prompted = localStorage.getItem('vip_prompt_shown');
+        
         if (stored && !prompted) {
           const profile = JSON.parse(stored);
           if (!profile.vipRequested && !profile.isVIP) {
-            const timer = setTimeout(() => {
-              setIsOpen(true);
-              localStorage.setItem('vip_prompt_shown', 'true');
-            }, 10000); // 10 seconds
-            return () => clearTimeout(timer);
+            
+            const isFitstreetPage = window.location.pathname.includes('/my-pass') || 
+                                  window.location.pathname.includes('/events/fitstreet-2026') || 
+                                  window.location.pathname.includes('/scanner');
+            
+            if (isFitstreetPage) {
+              let startTime = sessionStorage.getItem('fitstreet_start_time');
+              if (!startTime) {
+                startTime = Date.now().toString();
+                sessionStorage.setItem('fitstreet_start_time', startTime);
+              }
+              
+              if (Date.now() - parseInt(startTime) >= 20000) {
+                setIsOpen(true);
+                localStorage.setItem('vip_prompt_shown', 'true');
+                clearInterval(interval);
+              }
+            }
           }
         }
       } catch (e) {}
+    }, 1000);
+
+    return () => {
+      window.removeEventListener('open-vip-modal', handleOpen);
+      clearInterval(interval);
     };
-
-    checkAndShow();
-
-    const handleOpen = () => setIsOpen(true);
-    window.addEventListener('open-vip-modal', handleOpen);
-    return () => window.removeEventListener('open-vip-modal', handleOpen);
   }, []);
 
   const handleUpgrade = async () => {
