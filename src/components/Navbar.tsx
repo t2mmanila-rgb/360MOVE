@@ -12,9 +12,11 @@ const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
-  const [isLoggedIn] = useState(false); // Mock auth state
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   useEffect(() => {
+    const saved = localStorage.getItem('user_profile');
+    if (saved) setUserProfile(JSON.parse(saved));
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
@@ -30,20 +32,18 @@ const Navbar: React.FC = () => {
     { name: 'Rewards', href: '/rewards', icon: Award },
   ];
 
-  const mobileLinks = isLoggedIn 
+  const mobileLinks = userProfile 
     ? [
         { name: 'Home', href: '/', icon: Home },
         { name: 'Programs', href: '/programs', icon: Grid },
-        { name: 'My Pass', href: '/my-pass', icon: Calendar },
-        { name: 'Rewards', href: '/rewards', icon: Award },
-        { name: 'Profile', href: '/profile', icon: User },
+        { name: 'Passport', href: '/my-pass', icon: Calendar },
+        { name: 'Login', href: '/register', icon: User },
       ]
     : [
         { name: 'Home', href: '/', icon: Home },
         { name: 'Programs', href: '/programs', icon: Grid },
         { name: 'Events', href: '/events', icon: Calendar },
         { name: 'Register', href: '/register', icon: User },
-        { name: 'Login', href: '/login', icon: User },
       ];
 
   return (
@@ -100,10 +100,10 @@ const Navbar: React.FC = () => {
               <MapPin className="w-5 h-5" />
             </button>
             <Link 
-              to="/register" 
+              to={userProfile ? "/my-pass" : "/register"} 
               className="pill-button bg-brand-purple text-white hover:bg-brand-royalblue px-6 py-2.5 text-sm"
             >
-              Register / My Pass
+              {userProfile ? "My Pass" : "Register"}
             </Link>
           </div>
 

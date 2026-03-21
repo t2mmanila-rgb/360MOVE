@@ -3,10 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, MapPin, Info, ArrowRight, Zap } from 'lucide-react';
 import { B2B_PASSPORT_BRANDS, MOCK_SCHEDULE } from '../data/activities';
 import type { Activity, PassportBrand } from '../data/activities';
-import MobileFooter from '../components/MobileFooter';
-import { useNavigate } from 'react-router-dom';
-import { cn } from '../lib/utils';
 import { resolveDriveImageUrl, logRegistrationToSheet } from '../lib/google-sheets';
+import { useNavigate } from 'react-router-dom';
+import Scanner from '../components/Scanner';
+import { cn } from '../lib/utils';
 
 type ViewMode = 'dashboard' | 'passport';
 
@@ -17,6 +17,7 @@ const MyPass: React.FC = () => {
   const [view, setView] = React.useState<ViewMode>('dashboard');
   const [activeZone, setActiveZone] = React.useState<string>('THE ARENA');
   const [selectedItem, setSelectedItem] = React.useState<Activity | PassportBrand | null>(null);
+  const [showScanner, setShowScanner] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [successActivity, setSuccessActivity] = React.useState<Activity | null>(null);
   const navigate = useNavigate();
@@ -59,36 +60,34 @@ const MyPass: React.FC = () => {
     localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
   };
 
-  const handleScanQR = (brandId?: string) => {
-    // Open camera to scan
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.capture = 'environment';
-    input.onchange = (e: any) => {
-      const file = e.target.files[0];
-      if (file) {
-        // Mock successful scan for the specific brand
-        const brand = B2B_PASSPORT_BRANDS.find(b => b.id === brandId) || B2B_PASSPORT_BRANDS.find(b => !completedIds.includes(b.id));
-        if (brand) {
-          const newCompleted = [...completedIds, brand.id];
-          setCompletedIds(newCompleted);
-          localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
-          
-          logRegistrationToSheet('https://script.google.com/macros/s/AKfycbz_placeholder/exec', {
-            userId: userProfile?.mobile || 'unknown',
-            userName: userProfile?.name || 'Guest',
-            activityId: brand.id,
-            activityTitle: brand.name,
-            type: 'brand',
-            timestamp: new Date().toISOString()
-          });
-          
-          alert(`Successfully scanned ${brand.name}! +10 Points added.`);
-        }
-      }
-    };
-    input.click();
+  const handleScanQR = (_brandId?: string) => {
+    setShowScanner(true);
+  };
+
+  const handleScanSuccess = (_decodedTextValue: string) => {
+    // In a real app, decodedTextValue would contain the brand ID or a secure token
+    // For this simulation, we'll mark the first uncompleted brand as completed
+    const brand = B2B_PASSPORT_BRANDS.find(b => !completedIds.includes(b.id));
+    if (brand) {
+      const newCompleted = [...completedIds, brand.id];
+      setCompletedIds(newCompleted);
+      localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
+      
+      logRegistrationToSheet('https://script.google.com/macros/s/AKfycbz_placeholder/exec', {
+        userId: userProfile?.mobile || 'unknown',
+        userName: userProfile?.name || 'Guest',
+        activityId: brand.id,
+        activityTitle: brand.name,
+        type: 'brand',
+        timestamp: new Date().toISOString()
+      });
+      
+      setShowScanner(false);
+      setView('passport'); // Auto-return to passport challenge
+      
+      // Auto-open success state feedback
+      alert(`SUCCESS! Scanned ${brand.name}. 10 Points Added to your Pass.`);
+    }
   };
 
   const calculatePoints = () => {
@@ -210,9 +209,17 @@ const MyPass: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-fs-cyan/30 pb-32">
+    <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-fs-cyan/30 pb-32 relative">
+      {/* QR Scanner Modal */}
+      {showScanner && (
+        <Scanner 
+          onScanSuccess={handleScanSuccess} 
+          onClose={() => setShowScanner(false)} 
+        />
+      )}
+
       {/* Mobile Header */}
-      <section className="pt-16 px-6 pb-4">
+      <section className="pt-28 px-6 pb-4">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <button 
@@ -499,7 +506,6 @@ const MyPass: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <MobileFooter />
     </div>
   );
 };

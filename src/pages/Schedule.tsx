@@ -3,7 +3,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, MapPin, Zap, Calendar, ArrowLeft } from 'lucide-react';
 import { MOCK_SCHEDULE } from '../data/activities';
 import { useNavigate } from 'react-router-dom';
-import MobileFooter from '../components/MobileFooter';
 
 const Schedule: React.FC = () => {
   const [activeDay, setActiveDay] = useState('May 9');
@@ -120,7 +119,6 @@ const Schedule: React.FC = () => {
         </div>
       </div>
 
-      <MobileFooter />
     </div>
   );
 };

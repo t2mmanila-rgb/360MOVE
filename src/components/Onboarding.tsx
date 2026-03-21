@@ -39,15 +39,13 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
 
   const handleFinalize = () => {
     const savedProfile = localStorage.getItem('user_profile');
-    if (savedProfile) {
-      const profile = JSON.parse(savedProfile);
-      const updatedProfile = { 
-        ...profile, 
-        ...formData, 
-        personalized: true 
-      };
-      localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
-    }
+    const profile = savedProfile ? JSON.parse(savedProfile) : {};
+    const updatedProfile = { 
+      ...profile, 
+      ...formData, 
+      personalized: true 
+    };
+    localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
     onComplete();
   };
 

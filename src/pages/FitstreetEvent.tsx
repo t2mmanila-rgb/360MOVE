@@ -84,7 +84,7 @@ const FitstreetEvent: React.FC = () => {
               onClick={() => setShowOnboarding(true)}
               className="pill-button bg-fs-orange hover:bg-fs-pink text-white px-16 py-7 shadow-[0_0_50px_-10px_rgba(255,107,44,0.5)] text-xl italic"
             >
-              BOOK YOUR PASS
+              GET YOUR FREE PASS
             </button>
             <button className="flex items-center gap-4 font-black uppercase tracking-widest text-[10px] text-white/40 hover:text-white transition-all group">
               <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
@@ -218,7 +218,7 @@ const FitstreetEvent: React.FC = () => {
               onClick={() => setShowOnboarding(true)}
               className="pill-button bg-white text-slate-900 px-24 py-8 text-2xl italic tracking-tighter shadow-[0_0_80px_rgba(255,255,255,0.15)] hover:bg-fs-orange hover:text-white hover:shadow-fs-orange/40"
             >
-              BOOK YOUR PASS
+              GET YOUR FREE PASS
             </button>
             <div className="mt-10 flex items-center gap-6 text-[10px] font-black uppercase tracking-[0.3em] text-slate-600">
               <span className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500" /> 14.2k Subscribed</span>
