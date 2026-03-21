@@ -190,7 +190,7 @@ const MyPass: React.FC = () => {
       return total + (isPaidContent ? (hasPaid ? 10 : 0) : 1);
     }, 0);
 
-    const registrationPoints = registeredActivityIds.reduce((total, id) => {
+    const registrationPoints = registeredActivityIds.reduce((total, _id) => {
       // Points should only be given once the user registers physically on site (QR scan)
       return total + 0;
     }, 0);
