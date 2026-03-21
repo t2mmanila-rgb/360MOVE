@@ -10,7 +10,7 @@ const MobileFooter: React.FC = () => {
         <div className="flex items-center justify-between p-3 relative">
           
           <NavLink 
-            to="/" 
+            to="/my-pass" 
             className={({ isActive }) => `flex flex-col items-center gap-1.5 flex-1 py-3 transition-all duration-500 rounded-2xl ${isActive ? 'text-fs-cyan scale-110' : 'text-slate-400 hover:text-white'}`}
           >
             <Home className="w-5 h-5" />

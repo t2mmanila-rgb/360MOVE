@@ -4,6 +4,7 @@ import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, Map
 import { B2B_PASSPORT_BRANDS, MOCK_SCHEDULE } from '../data/activities';
 import type { Activity, PassportBrand } from '../data/activities';
 import { resolveDriveImageUrl, logRegistrationToSheet } from '../lib/google-sheets';
+import MobileFooter from '../components/MobileFooter';
 import { useNavigate } from 'react-router-dom';
 import Scanner from '../components/Scanner';
 import { cn } from '../lib/utils';
@@ -506,6 +507,7 @@ const MyPass: React.FC = () => {
         )}
       </AnimatePresence>
 
+      <MobileFooter />
     </div>
   );
 };

@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Zap, ChevronRight, Share2, Ticket, Sparkles, Map } from 'lucide-react';
 import { MOCK_SCHEDULE, type Activity } from '../data/activities';
 import Onboarding from '../components/Onboarding';
+import MobileFooter from '../components/MobileFooter';
 import { useNavigate, Link } from 'react-router-dom';
 import UniversalCard from '../components/UniversalCard';
 
@@ -236,6 +237,7 @@ const FitstreetEvent: React.FC = () => {
           />
         )}
       </AnimatePresence>
+      <MobileFooter />
     </div>
   );
 };

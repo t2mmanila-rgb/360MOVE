@@ -34,10 +34,10 @@ const Navbar: React.FC = () => {
 
   const mobileLinks = userProfile 
     ? [
-        { name: 'Home', href: '/', icon: Home },
+        { name: 'Home', href: '/my-pass', icon: Home },
         { name: 'Programs', href: '/programs', icon: Grid },
         { name: 'Passport', href: '/my-pass', icon: Calendar },
-        { name: 'Login', href: '/register', icon: User },
+        { name: 'My Pass', href: '/my-pass', icon: User },
       ]
     : [
         { name: 'Home', href: '/', icon: Home },
@@ -136,7 +136,10 @@ const Navbar: React.FC = () => {
       )}
 
       {/* Mobile Sticky Bottom Bar */}
-      <nav className="xl:hidden fixed bottom-0 left-0 right-0 z-50 glass border-t border-slate-100 px-4 py-2 flex items-center justify-between pb-safe">
+      <nav className={cn(
+        "xl:hidden fixed bottom-12 left-6 right-6 z-50 glass border-t border-slate-100 flex items-center justify-between pb-safe rounded-3xl p-4 shadow-2xl transition-all duration-300",
+        (location.pathname === '/my-pass' || location.pathname.includes('/events/fitstreet-2026')) && "opacity-0 pointer-events-none scale-95"
+      )}>
         {mobileLinks.map((link) => (
           <Link
             key={link.name}
