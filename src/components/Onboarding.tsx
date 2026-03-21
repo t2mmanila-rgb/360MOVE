@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Mail, Phone, Check, ChevronRight, Sparkles, X, ShieldCheck } from 'lucide-react';
+import { syncUserProfileToSheet } from '../lib/google-sheets';
 
 interface OnboardingProps {
   onComplete: () => void;
@@ -16,7 +17,9 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
     categories: [] as string[],
     ageRange: '',
     city: '',
-    gender: ''
+    gender: '',
+    agreePrivacy: false,
+    signupDate: new Date().toISOString()
   });
 
   const categories = [
@@ -43,9 +46,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
     const updatedProfile = { 
       ...profile, 
       ...formData, 
-      personalized: true 
+      personalized: true,
+      points: (profile.points || 0) + 1, // Base point for onboarding
+      pointsOnboarding: 1,
+      signupDate: formData.signupDate || new Date().toISOString()
     };
+    console.log('Finalizing Onboarding - Saving Profile:', updatedProfile);
     localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
+    syncUserProfileToSheet(updatedProfile);
     onComplete();
   };
 
@@ -122,11 +130,27 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
                     onChange={e => setFormData({...formData, mobile: e.target.value})}
                   />
                 </div>
+
+                <label className="flex items-start gap-4 cursor-pointer group/check">
+                  <div className="relative flex items-center justify-center mt-1">
+                    <input 
+                      type="checkbox"
+                      className="peer h-6 w-6 opacity-0 absolute cursor-pointer"
+                      checked={formData.agreePrivacy}
+                      onChange={e => setFormData({...formData, agreePrivacy: e.target.checked})}
+                    />
+                    <div className="h-6 w-6 border-2 border-white/20 rounded-lg bg-white/5 peer-checked:bg-fs-cyan peer-checked:border-fs-cyan transition-all group-hover/check:border-fs-cyan/50" />
+                    <Check className="absolute h-4 w-4 text-slate-900 opacity-0 peer-checked:opacity-100 transition-opacity pointer-events-none" />
+                  </div>
+                  <span className="text-xs text-slate-400 font-medium leading-relaxed select-none">
+                    I agree to the <button className="text-fs-cyan hover:underline">Terms & Conditions</button> and <button className="text-fs-cyan hover:underline">Data Privacy Policy</button>.
+                  </span>
+                </label>
               </div>
 
               <button 
                 onClick={nextStep}
-                disabled={!formData.name || !formData.email || !formData.mobile}
+                disabled={!formData.name || !formData.email || !formData.mobile || !formData.agreePrivacy}
                 className="w-full py-6 bg-fs-orange hover:bg-fs-pink disabled:opacity-30 disabled:grayscale transition-all rounded-3xl text-white font-black uppercase tracking-widest flex items-center justify-center gap-4 shadow-2xl shadow-fs-orange/30 text-lg hover:scale-[1.02] active:scale-95"
               >
                 GENERATE MY PASS <ChevronRight className="w-6 h-6" />

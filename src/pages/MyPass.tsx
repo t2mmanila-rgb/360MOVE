@@ -1,11 +1,12 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, MapPin, Info, ArrowRight, Zap } from 'lucide-react';
+import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, MapPin, Info, ArrowRight, Zap, Star, User } from 'lucide-react';
 import { B2B_PASSPORT_BRANDS, MOCK_SCHEDULE } from '../data/activities';
 import type { Activity, PassportBrand } from '../data/activities';
-import { resolveDriveImageUrl, logRegistrationToSheet } from '../lib/google-sheets';
+import { resolveDriveImageUrl, logRegistrationToSheet, syncUserProfileToSheet, fetchGoogleSheetData, PASSPORT_CHALLENGE_SHEET_ID } from '../lib/google-sheets';
 import MobileFooter from '../components/MobileFooter';
 import { useNavigate } from 'react-router-dom';
+import EarnPointsModal from '../components/EarnPointsModal';
 import Scanner from '../components/Scanner';
 import { cn } from '../lib/utils';
 
@@ -19,8 +20,11 @@ const MyPass: React.FC = () => {
   const [activeZone, setActiveZone] = React.useState<string>('THE ARENA');
   const [selectedItem, setSelectedItem] = React.useState<Activity | PassportBrand | null>(null);
   const [showScanner, setShowScanner] = React.useState(false);
+  const [showEarnPointsModal, setShowEarnPointsModal] = React.useState(false);
+  const [showProfileModal, setShowProfileModal] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [successActivity, setSuccessActivity] = React.useState<Activity | null>(null);
+  const [brands, setBrands] = React.useState<PassportBrand[]>(B2B_PASSPORT_BRANDS);
   const navigate = useNavigate();
 
   React.useEffect(() => {
@@ -34,6 +38,33 @@ const MyPass: React.FC = () => {
     }
     if (savedCompleted) setCompletedIds(JSON.parse(savedCompleted));
     if (savedRegistered) setRegisteredActivityIds(JSON.parse(savedRegistered));
+  }, []);
+
+  // Sync with Spreadsheet for Passport Challenge Details
+  React.useEffect(() => {
+    const syncBrands = async () => {
+      if (!PASSPORT_CHALLENGE_SHEET_ID || PASSPORT_CHALLENGE_SHEET_ID.includes('PLACEHOLDER')) return;
+      
+      const remoteData = await fetchGoogleSheetData(PASSPORT_CHALLENGE_SHEET_ID);
+      if (remoteData && remoteData.length > 0) {
+        // Merge remote data with existing brands
+        const updatedBrands = B2B_PASSPORT_BRANDS.map(localBrand => {
+          const remoteBrand = remoteData.find((r: any) => r.id === localBrand.id || r.name === localBrand.name);
+          if (remoteBrand) {
+            return {
+              ...localBrand,
+              description: remoteBrand.description || localBrand.description,
+              mechanics: remoteBrand.mechanics || localBrand.mechanics,
+              booth: remoteBrand.booth || localBrand.booth,
+              category: remoteBrand.category || localBrand.category
+            };
+          }
+          return localBrand;
+        });
+        setBrands(updatedBrands);
+      }
+    };
+    syncBrands();
   }, []);
 
   const handleRegisterActivity = (id: string, e?: React.MouseEvent) => {
@@ -65,10 +96,11 @@ const MyPass: React.FC = () => {
     setShowScanner(true);
   };
 
-  const handleScanSuccess = (_decodedTextValue: string) => {
+  const handleScanSuccess = (decodedTextValue: string) => {
     // In a real app, decodedTextValue would contain the brand ID or a secure token
     // For this simulation, we'll mark the first uncompleted brand as completed
-    const brand = B2B_PASSPORT_BRANDS.find(b => !completedIds.includes(b.id));
+    const brandId = decodedTextValue; // Assuming decodedTextValue is the brand ID
+    const brand = brands.find(b => b.id === brandId);
     if (brand) {
       const newCompleted = [...completedIds, brand.id];
       setCompletedIds(newCompleted);
@@ -86,15 +118,44 @@ const MyPass: React.FC = () => {
       setShowScanner(false);
       setView('passport'); // Auto-return to passport challenge
       
+      const isPaid = brand.id === 'pb-gballers' || brand.id === 'pb-viking';
+      const pointsAdded = isPaid ? 10 : 1;
+
+      const updated = {
+        ...userProfile,
+        pointsScans: (userProfile.pointsScans || 0) + 1,
+        points: (userProfile.points || 0) + pointsAdded
+      };
+      setUserProfile(updated);
+      localStorage.setItem('user_profile', JSON.stringify(updated));
+      syncUserProfileToSheet(updated);
+
       // Auto-open success state feedback
-      alert(`SUCCESS! Scanned ${brand.name}. 10 Points Added to your Pass.`);
+      alert(`SUCCESS! Scanned ${brand.name}. ${pointsAdded} Point${pointsAdded > 1 ? 's' : ''} Added to your Pass.`);
     }
   };
 
   const calculatePoints = () => {
-    const passportPoints = completedIds.length * 10;
-    const registrationPoints = registeredActivityIds.length * 5;
-    return passportPoints + registrationPoints;
+    // Standard brand scan is now 1 point. G'Ballers and Viking are 10 points.
+    const passportPoints = completedIds.reduce((total, id) => {
+      const isPaid = id === 'pb-gballers' || id === 'pb-viking';
+      return total + (isPaid ? 10 : 1);
+    }, 0);
+
+    const registrationPoints = registeredActivityIds.reduce((total, id) => {
+      const isPaid = id === 'gballers-free' || id === 'viking-games-sat';
+      return total + (isPaid ? 10 : 5);
+    }, 0);
+
+    const profilePoints = (userProfile?.profileCompleted ? 1 : 0);
+    const sharePoints = userProfile?.pointsHRShare || 0;
+    
+    return passportPoints + registrationPoints + profilePoints + sharePoints;
+  };
+
+  const handlePointsEarned = (updatedProfile: any) => {
+    setUserProfile(updatedProfile);
+    syncUserProfileToSheet(updatedProfile);
   };
 
   const displayName = userProfile?.name || "Member";
@@ -171,6 +232,18 @@ const MyPass: React.FC = () => {
                   {selectedItem.mechanics}
                 </p>
               </div>
+
+              {(selectedItem.id === 'pb-gballers' || selectedItem.id === 'pb-viking' || selectedItem.id === 'gballers-free' || selectedItem.id === 'viking-games-sat') && (
+                <div className="bg-fs-orange/10 rounded-2xl p-6 mb-8 border border-fs-orange/20">
+                  <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <Zap className="w-4 h-4" /> Participation Details
+                  </h3>
+                  <div className="space-y-2">
+                    <p className="text-white text-sm font-bold italic">Cost: P10,000 for a team of 4</p>
+                    <p className="text-slate-400 text-xs font-medium leading-relaxed">Exclusive for non-corporates. Standard registration rates apply for individuals.</p>
+                  </div>
+                </div>
+              )}
 
               {'logo' in selectedItem ? (
                 <button 
@@ -274,12 +347,21 @@ const MyPass: React.FC = () => {
             <span className="text-[10px] font-black uppercase tracking-widest text-fs-cyan mb-3 block">Total Accumulated Points</span>
             <div className="text-7xl font-black italic mb-8 tracking-tighter">{calculatePoints()}</div>
             <div className="flex gap-3">
-              <button 
-                onClick={() => setView('passport')}
-                className="flex-1 bg-fs-orange hover:bg-fs-orange/90 transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 text-white shadow-lg shadow-fs-orange/20"
-              >
-                Go to Passport <MapIcon className="w-4 h-4" />
-              </button>
+              {!userProfile?.profileCompleted ? (
+                <button 
+                  onClick={() => setShowEarnPointsModal(true)}
+                  className="flex-1 bg-fs-orange hover:bg-fs-pink transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 text-white shadow-lg shadow-fs-orange/20"
+                >
+                  <Star className="w-4 h-4 fill-white" /> Earn More Points
+                </button>
+              ) : (
+                <button 
+                  onClick={() => setShowProfileModal(true)}
+                  className="flex-1 bg-fs-cyan text-slate-900 hover:bg-fs-cyan/90 transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
+                >
+                  <User className="w-4 h-4" /> My Profile
+                </button>
+              )}
               <button 
                 onClick={() => navigate('/events/fitstreet-2026/schedule')}
                 className="flex-1 bg-white text-slate-900 hover:bg-fs-cyan transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
@@ -368,9 +450,9 @@ const MyPass: React.FC = () => {
                    <div className="h-0.5 bg-white/5 flex-grow rounded-full" />
                  </div>
 
-                 <div className="grid grid-cols-2 gap-4">
+                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
                    {/* Brands in this Zone - Active by Default */}
-                   {B2B_PASSPORT_BRANDS.filter(b => b.zone === zone).map(brand => (
+                   {brands.filter(b => b.zone === zone).map(brand => (
                      <motion.div 
                        key={brand.id}
                        whileTap={{ scale: 0.95 }}
@@ -508,6 +590,72 @@ const MyPass: React.FC = () => {
       </AnimatePresence>
 
       <MobileFooter />
+      
+      <EarnPointsModal 
+        isOpen={showEarnPointsModal}
+        onClose={() => setShowEarnPointsModal(false)}
+        onComplete={handlePointsEarned}
+      />
+
+      <AnimatePresence>
+        {showProfileModal && (
+          <div className="fixed inset-0 z-[110] flex items-center justify-center px-4 bg-slate-900/60 backdrop-blur-2xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="relative w-full max-w-lg bg-fs-dark border border-white/10 rounded-[3rem] p-8 md:p-12 overflow-y-auto max-h-[90vh] shadow-2xl"
+            >
+              <button onClick={() => setShowProfileModal(false)} className="absolute top-8 right-8 text-slate-500">
+                <X className="w-6 h-6" />
+              </button>
+              <div className="text-center mb-10">
+                <div className="w-20 h-20 bg-fs-cyan/20 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                  <User className="w-10 h-10 text-fs-cyan" />
+                </div>
+                <h2 className="text-3xl font-black italic uppercase italic tracking-tighter text-white">Full Profile.</h2>
+                <p className="text-slate-500 font-bold uppercase text-[10px] tracking-[0.2em] mt-2">Member Since: {userProfile?.signupDate ? new Date(userProfile.signupDate).toLocaleDateString() : 'N/A'}</p>
+              </div>
+
+              <div className="space-y-4">
+                {[
+                  { label: "Email", value: userProfile.email || userProfile.name?.toLowerCase().replace(' ', '.') + '@gmail.com' },
+                  { label: "Mobile", value: userProfile.mobile || '09XX XXX XXXX' },
+                  { label: "Work Setup", value: userProfile.workSetup },
+                  { label: "Company", value: userProfile.companyName },
+                  { label: "Occupation", value: userProfile.occupation },
+                  { label: "Income Bracket", value: userProfile.incomeBracket },
+                  { label: "Fitness Level", value: userProfile.fitnessLevel },
+                  { label: "Years Active", value: userProfile.yearsActive },
+                  { label: "Training Goal", value: userProfile.trainingGoal },
+                  { label: "Workout Frequency", value: userProfile.workoutFrequency },
+                  { label: "Preferred Time", value: userProfile.preferredTime },
+                  { label: "Diet Type", value: userProfile.dietType },
+                ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center py-4 border-b border-white/5">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
+                    <span className="text-sm font-bold text-white">{item.value || 'N/A'}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-12 space-y-4">
+                <div className="p-4 bg-slate-800/50 rounded-2xl border border-white/5">
+                  <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-loose">
+                    You consented to our <button className="text-fs-cyan">Terms & Conditions</button> and <button className="text-fs-cyan">Data Privacy Policy</button> on {userProfile?.signupDate ? new Date(userProfile.signupDate).toLocaleDateString() : new Date().toLocaleDateString()}.
+                  </p>
+                </div>
+                <button 
+                  onClick={() => setShowProfileModal(false)}
+                  className="w-full py-5 bg-white/5 border border-white/10 text-white rounded-2xl font-black uppercase tracking-widest hover:bg-white/10 transition-colors"
+                >
+                  Close Profile
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

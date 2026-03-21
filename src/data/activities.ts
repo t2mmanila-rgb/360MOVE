@@ -30,6 +30,7 @@ export interface PassportBrand {
   isSignupRequired?: boolean;
   zone: 'EAT' | 'PLAY' | 'HEAL' | 'GLOW' | 'THE ARENA';
   mechanics: string;
+  points: number;
 }
 
 export const MOCK_SCHEDULE: Activity[] = [
@@ -164,7 +165,6 @@ export const MOCK_SCHEDULE: Activity[] = [
     id: 'viking-games-sat',
     title: 'Viking Games by Nordcham',
     category: 'Competitive',
-    points: 50,
     duration: '60 min',
     image: '/logos/Viking Games Banner - Fitstreet 2026.png',
     description: 'The ultimate strength and endurance challenge by Nordcham.',
@@ -172,7 +172,8 @@ export const MOCK_SCHEDULE: Activity[] = [
     time: '5:00 PM – 6:00 PM',
     location: '5th Ave',
     isPaid: true,
-    zone: 'THE ARENA'
+    zone: 'THE ARENA',
+    points: 10
   },
   {
     id: 'body-combat-sat',
@@ -435,7 +436,8 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     logo: '/logos/360MOVE Square Logo.png',
     isCompleted: false,
     zone: 'THE ARENA',
-    mechanics: 'Visit the Nike booth and share your personal movement goal for 2026 on social media using #NikeMovePass.'
+    mechanics: 'Visit the Nike booth and share your personal movement goal for 2026 on social media using #NikeMovePass.',
+    points: 1
   },
   {
     id: 'pb-skippys',
@@ -448,7 +450,8 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     logo: '1yZ9X_placeholder_skippys_id', 
     isCompleted: false,
     zone: 'EAT',
-    mechanics: 'Visit the "Skippy Joy Station" and hold a 15-second "Peanut Butter Power-Up" pose (e.g., a "Flex for Joy") in front of the giant iconic teal jar.'
+    mechanics: 'Visit the "Skippy Joy Station" and hold a 15-second "Peanut Butter Power-Up" pose (e.g., a "Flex for Joy") in front of the giant iconic teal jar.',
+    points: 1
   },
   {
     id: 'pb-chobani',
@@ -461,7 +464,8 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     logo: '1yZ9X_placeholder_chobani_id', 
     isCompleted: false,
     zone: 'HEAL',
-    mechanics: 'Participate in a "30-Second Recovery Ritual" involving guided deep-breathing stretches while holding a Chobani cup prop.'
+    mechanics: 'Participate in a "30-Second Recovery Ritual" involving guided deep-breathing stretches while holding a Chobani cup prop.',
+    points: 1
   },
   {
     id: 'pb-goodies',
@@ -474,7 +478,8 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     logo: '1yZ9X_placeholder_goodies_id', 
     isCompleted: false,
     zone: 'PLAY',
-    mechanics: 'Approach the "Goodies Discovery Table" and correctly identify one key natural ingredient in a featured Goodies snack bar.'
+    mechanics: 'Approach the "Goodies Discovery Table" and correctly identify one key natural ingredient in a featured Goodies snack bar.',
+    points: 1
   },
   {
     id: 'pb-gballers',
@@ -488,7 +493,8 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     isCompleted: false,
     isSignupRequired: true,
     zone: 'PLAY',
-    mechanics: 'Complete a shooting drill or join a 3x3 scrimmage to unlock your digital badge.'
+    mechanics: 'Complete a shooting drill or join a 3x3 scrimmage to unlock your digital badge.',
+    points: 10
   },
   {
     id: 'pb-viking',
@@ -502,7 +508,8 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     isCompleted: false,
     isSignupRequired: true,
     zone: 'THE ARENA',
-    mechanics: 'Complete the Viking Strength circuit: 20 kettlebell swings and a 30-second plank.'
+    mechanics: 'Complete the Viking Strength circuit: 20 kettlebell swings and a 30-second plank.',
+    points: 10
   },
   {
     id: 'pb-adidas',
@@ -515,6 +522,7 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     logo: '/logos/fitstreet-logo-high-res.png',
     isCompleted: false,
     zone: 'PLAY',
-    mechanics: 'Try on a pair of the latest Adidas runners and perform a 30-second trial run on the treadmill.'
+    mechanics: 'Try on a pair of the latest Adidas runners and perform a 30-second trial run on the treadmill.',
+    points: 1
   }
 ];

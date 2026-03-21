@@ -42,12 +42,30 @@ const parseCSV = (csv: string) => {
  */
 export const resolveDriveImageUrl = (linkOrId: string) => {
   if (!linkOrId) return '';
-  if (linkOrId.startsWith('http')) {
-    const match = linkOrId.match(/\/d\/([^/]+)/);
-    const fileId = match ? match[1] : linkOrId;
-    return `https://drive.google.com/uc?id=${fileId}`;
+  
+  let fileId = linkOrId.trim();
+
+  if (fileId.startsWith('http')) {
+    try {
+      const url = new URL(fileId);
+      const idParam = url.searchParams.get('id');
+      if (idParam) {
+        fileId = idParam;
+      } else {
+        const match = url.pathname.match(/\/d\/([a-zA-Z0-9_-]+)/);
+        if (match && match[1]) {
+          fileId = match[1];
+        }
+      }
+    } catch (e) {
+      const match = fileId.match(/\/d\/([a-zA-Z0-9_-]+)/);
+      if (match && match[1]) {
+        fileId = match[1];
+      }
+    }
   }
-  return `https://drive.google.com/uc?id=${linkOrId}`;
+
+  return `https://drive.google.com/uc?export=view&id=${fileId}`;
 };
 
 /**
@@ -74,6 +92,58 @@ export const logRegistrationToSheet = async (scriptUrl: string, data: {
     return !!response;
   } catch (error) {
     console.error('Error logging to sheet:', error);
+    return false;
+  }
+};
+// USER: Replace this URL with your deployed Google Apps Script Web App URL
+const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby7--LX2UwK649yFZW8rvjnpxnuIoPoBp_3fN3_nblt03Tm4JWUndvvgb4wZJPnQ38w/exec';
+
+// USER: Replace this with your actual Google Sheet ID for the Passport Challenge
+export const PASSPORT_CHALLENGE_SHEET_ID = '1AlZKy1eIdkO40v8HW4EfzF2d-1ZK1kTZwCbGIDUkwPA';
+
+/**
+ * Syncs the full user profile (including advanced details and points) to Google Sheets.
+ */
+export const syncUserProfileToSheet = async (profile: any) => {
+  const scriptUrl = GOOGLE_SCRIPT_URL;
+  
+  try {
+    const data = {
+      fullName: profile.name,
+      email: profile.email,
+      mobileNumber: profile.mobile,
+      fitnessLevel: profile.fitnessLevel || "",
+      workoutFrequency: profile.workoutFrequency || "",
+      yearsActive: profile.yearsActive || "",
+      preferredTime: profile.preferredTime || "",
+      trainingGoal: profile.trainingGoal || "",
+      dietType: profile.dietType || "",
+      supplementUsage: (profile.supplementUsage || []).join(', '),
+      occupation: profile.occupation || "",
+      workSetup: profile.workSetup || "",
+      incomeBracket: profile.incomeBracket || "",
+      companyName: profile.companyName || "",
+      pointsOnboarding: 1, // Base point for signing up
+      pointsProfileCompletion: profile.profileCompleted ? 1 : 0,
+      pointsHRShare: profile.pointsHRShare || 0,
+      pointsScans: profile.pointsScans || 0,
+      totalPoints: profile.points || 1,
+      agreeTC: profile.agreePrivacy || false,
+      agreePrivacy: profile.agreePrivacy || false,
+      signupDate: profile.signupDate || new Date().toISOString()
+    };
+
+    const response = await fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    });
+    return !!response;
+  } catch (error) {
+    console.error('Error syncing user profile:', error);
     return false;
   }
 };
