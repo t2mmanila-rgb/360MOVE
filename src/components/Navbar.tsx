@@ -99,12 +99,22 @@ const Navbar: React.FC = () => {
             <button className="p-2 text-white/60 hover:text-fs-cyan transition-colors">
               <MapPin className="w-5 h-5" />
             </button>
-            <Link 
-              to={userProfile ? "/my-pass" : "/register"} 
-              className="pill-button bg-brand-purple text-white hover:bg-brand-royalblue px-6 py-2.5 text-sm"
-            >
-              {userProfile ? "My Pass" : "Register"}
-            </Link>
+            {location.pathname.includes('/events/fitstreet-2026') ? (
+              <button 
+                onClick={() => window.dispatchEvent(new CustomEvent('open-onboarding'))}
+                className="pill-button bg-fs-orange text-white hover:bg-fs-pink px-6 py-2.5 text-sm font-bold uppercase tracking-widest transition-all shadow-lg shadow-fs-orange/20"
+              >
+                Register
+              </button>
+            ) : (
+              <Link 
+                to={userProfile ? "/my-pass" : "/register"} 
+                className="pill-button bg-brand-purple text-white hover:bg-brand-royalblue px-6 py-1.5 flex flex-col items-center justify-center leading-tight transition-all"
+              >
+                <span className="font-bold text-sm tracking-wide">{userProfile ? "My Pass" : "Let's Move!"}</span>
+                {!userProfile && <span className="text-[9px] font-medium opacity-80 uppercase tracking-widest mt-0.5">Sign up today.</span>}
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Toggle */}

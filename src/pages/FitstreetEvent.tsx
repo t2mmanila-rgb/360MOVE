@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Zap, ChevronRight, Share2, Ticket, Sparkles, Map } from 'lucide-react';
 import { MOCK_SCHEDULE, type Activity } from '../data/activities';
@@ -10,6 +10,12 @@ import UniversalCard from '../components/UniversalCard';
 const FitstreetEvent: React.FC = () => {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const handleOpenOnboarding = () => setShowOnboarding(true);
+    window.addEventListener('open-onboarding', handleOpenOnboarding);
+    return () => window.removeEventListener('open-onboarding', handleOpenOnboarding);
+  }, []);
 
   const handleOnboardingComplete = () => {
     setShowOnboarding(false);
