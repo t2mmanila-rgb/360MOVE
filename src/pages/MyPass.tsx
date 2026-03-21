@@ -143,6 +143,24 @@ const MyPass: React.FC = () => {
     localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
   };
 
+  const handleUnregisterActivity = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const newRegistered = registeredActivityIds.filter(actId => actId !== id);
+    setRegisteredActivityIds(newRegistered);
+    localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
+    
+    if (selectedItem) {
+      logRegistrationToSheet('https://script.google.com/macros/s/AKfycby7--LX2UwK649yFZW8rvjnpxnuIoPoBp_3fN3_nblt03Tm4JWUndvvgb4wZJPnQ38w/exec', {
+        userId: userProfile?.mobile || 'unknown',
+        userName: userProfile?.name || 'Guest',
+        activityId: selectedItem.id,
+        activityTitle: 'name' in selectedItem ? selectedItem.name : selectedItem.title,
+        type: 'cancel_activity',
+        timestamp: new Date().toISOString()
+      });
+    }
+  };
+
   const handleScanSuccess = (decodedTextValue: string) => {
     // In a real app, decodedTextValue would contain the brand ID or a secure token
     // For this simulation, we'll mark the first uncompleted brand as completed
@@ -275,23 +293,26 @@ const MyPass: React.FC = () => {
                   <div className="flex items-center gap-2 text-fs-cyan text-[10px] font-black uppercase tracking-widest leading-none mb-1">
                     <CheckCircle2 className="w-4 h-4" /> Activated in Passport
                   </div>
-                  {(selectedItem as Activity).day && (
-                    <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                      <Calendar className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).day}
-                    </div>
-                  )}
-                  {((selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)) && (
-                    <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                      <Clock className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)}
-                    </div>
-                  )}
-                  {((selectedItem as Activity).location || (selectedItem as PassportBrand).booth) && (
-                    <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                      <MapPin className="w-3.5 h-3.5 text-fs-orange" /> {(selectedItem as Activity).location || (selectedItem as PassportBrand).booth}
-                    </div>
-                  )}
                 </div>
               )}
+
+              <div className="flex flex-col gap-2 mb-6 p-4 rounded-xl bg-white/5 border border-white/5">
+                {(selectedItem as Activity).day && (
+                  <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                    <Calendar className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).day}
+                  </div>
+                )}
+                {((selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)) && (
+                  <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                    <Clock className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)}
+                  </div>
+                )}
+                {((selectedItem as Activity).location || (selectedItem as PassportBrand).booth) && (
+                  <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                    <MapPin className="w-3.5 h-3.5 text-fs-orange" /> {(selectedItem as Activity).location || (selectedItem as PassportBrand).booth}
+                  </div>
+                )}
+              </div>
               <h3 className="text-3xl font-black italic mb-6 tracking-tight uppercase leading-tight">
                 {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
               </h3>
@@ -324,7 +345,7 @@ const MyPass: React.FC = () => {
                 </div>
               </div>
 
-              {((selectedItem.description?.length || 0) > 100 || (selectedItem.mechanics?.length || 0) > 100) && (
+              {((selectedItem.description?.length || 0) > 50 || (selectedItem.mechanics?.length || 0) > 50) && (
                 <button 
                   onClick={() => setIsExpanded(!isExpanded)}
                   className="w-full py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors text-xs mb-8 flex items-center justify-center gap-2"
@@ -355,24 +376,29 @@ const MyPass: React.FC = () => {
                   <QrCode className="w-5 h-5" /> Scan Booth QR
                 </button>
               ) : (
-                <button 
-                  onClick={(e) => {
-                    handleRegisterActivity(selectedItem.id, e);
-                    setSelectedItem(null);
-                  }}
-                  disabled={registeredActivityIds.includes(selectedItem.id)}
-                  className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg transition-all ${
-                    registeredActivityIds.includes(selectedItem.id)
-                      ? 'bg-slate-700 text-slate-500 cursor-default'
-                      : 'bg-fs-cyan text-slate-900 shadow-fs-cyan/20 active:scale-95'
-                  }`}
-                >
-                  {registeredActivityIds.includes(selectedItem.id) ? (
-                    <><CheckCircle2 className="w-5 h-5" /> Already Registered</>
+                <>
+                  {!registeredActivityIds.includes(selectedItem.id) ? (
+                    <button 
+                      onClick={(e) => {
+                        handleRegisterActivity(selectedItem.id, e);
+                        setSelectedItem(null);
+                      }}
+                      className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-fs-cyan text-slate-900 shadow-lg shadow-fs-cyan/20 active:scale-95 transition-all"
+                    >
+                      Register to Activate
+                    </button>
                   ) : (
-                    'Register to Activate'
+                    <button 
+                      onClick={(e) => {
+                        handleUnregisterActivity(selectedItem.id, e);
+                        setSelectedItem(null);
+                      }}
+                      className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 shadow-lg active:scale-95"
+                    >
+                      <X className="w-5 h-5" /> Cancel Registration
+                    </button>
                   )}
-                </button>
+                </>
               )}
             </div>
           </motion.div>

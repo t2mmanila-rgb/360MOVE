@@ -77,7 +77,7 @@ export const logRegistrationToSheet = async (scriptUrl: string, data: {
   userName: string;
   activityId: string;
   activityTitle: string;
-  type: 'activity' | 'brand';
+  type: 'activity' | 'brand' | 'cancel_activity';
   timestamp: string;
 }) => {
   try {
