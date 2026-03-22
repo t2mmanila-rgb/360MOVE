@@ -1,27 +1,29 @@
-import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Clock, MapPin, Star, ArrowLeft, Share2, Heart, Zap, ShieldCheck, Sparkles, User } from 'lucide-react';
+import React, { useEffect, useState, useMemo } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Clock, MapPin, Star, ArrowLeft, Share2, Heart, Zap, ShieldCheck, Sparkles, User, CheckCircle2, X } from 'lucide-react';
 import { useActivity } from '../lib/useActivity';
+import { syncUserActivity } from '../lib/supabase';
 
 const ActivityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [showSuccess, setShowSuccess] = useState(false);
+  const scanMode = searchParams.get('scan') === 'true';
   const { schedule, programs, brands } = useActivity();
 
   // Find the actual program from our merged record
-  const activity = React.useMemo(() => {
-    // Search in all data sources
-    const allActivities = [...schedule, ...programs];
+  const activity = useMemo(() => {
+    // 1. Search in Brands/Booths
     const brandMatch = brands?.find(b => b.id === id);
-    
-    // Convert brand to activity-like object if matched
     if (brandMatch) {
       return {
+        id: brandMatch.id,
         title: brandMatch.name,
         category: brandMatch.category,
         points: brandMatch.points || 1,
-        duration: 'Boots Visit',
+        duration: 'Booth Visit',
         location: brandMatch.booth,
         instructor: 'Brand Representative',
         description: brandMatch.description,
@@ -32,6 +34,8 @@ const ActivityDetail: React.FC = () => {
       };
     }
 
+    // 2. Search in Schedule/Programs
+    const allActivities = [...schedule, ...programs];
     const found = allActivities.find(p => 
       p.id === id || 
       p.title?.toLowerCase().replace(/\s+/g, '-') === id
@@ -56,6 +60,7 @@ const ActivityDetail: React.FC = () => {
     
     // Fallback mock
     return {
+      id: id || 'unknown',
       title: id?.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ') || 'Activity Detail',
       category: 'Lifestyle',
       points: 25,
@@ -68,12 +73,77 @@ const ActivityDetail: React.FC = () => {
       image: '/activities/rope_flow_premium.png',
       isPaid: false
     };
-  }, [id, schedule, programs]);
+  }, [id, schedule, programs, brands]);
+
+  // Automated Scan Registration
+  useEffect(() => {
+    if (scanMode && activity && activity.id !== 'unknown') {
+      const userStr = localStorage.getItem('user_profile') || localStorage.getItem('generic_user_profile');
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          if (user?.email) {
+            const isBrand = id?.startsWith('pb-');
+            const status = isBrand ? 'completed' : 'checked-in';
+            syncUserActivity(user.email, id!, activity.points, user, status, true).then(() => {
+              setShowSuccess(true);
+            });
+          }
+        } catch (e) {
+          console.error('Failed to parse user for scan sync', e);
+        }
+      }
+    }
+  }, [scanMode, activity, id]);
 
   return (
     <div className="bg-white min-h-screen pt-40 pb-56 selection:bg-brand-purple/20">
       <div className="fixed inset-0 noise-bg opacity-[0.02] pointer-events-none" />
       
+      <AnimatePresence>
+        {showSuccess && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/60 backdrop-blur-md"
+          >
+            <motion.div 
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="bg-white rounded-[3rem] p-12 max-w-sm w-full text-center shadow-2xl relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 w-32 h-32 bg-brand-turquoise/10 rounded-full blur-3xl opacity-50" />
+              <button 
+                onClick={() => setShowSuccess(false)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-slate-50 text-slate-400 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="w-20 h-20 bg-brand-turquoise/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
+                <CheckCircle2 className="w-10 h-10 text-brand-teal" />
+              </div>
+
+              <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 mb-4 leading-[0.9]">
+                Points <br /><span className="text-brand-turquoise">UNLOCKED!</span>
+              </h2>
+              <p className="text-slate-500 font-medium mb-10 leading-relaxed text-sm px-4">
+                Thank you for {id?.startsWith('pb-') ? 'visiting' : 'joining'} <span className="font-black italic text-slate-900">{activity.title}</span>! You've received <span className="text-brand-purple font-black">+{activity.points} points</span>!
+              </p>
+
+              <button 
+                onClick={() => setShowSuccess(false)}
+                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase italic tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-slate-900/20"
+              >
+                SWEET!
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="max-w-7xl mx-auto px-6 relative z-10">
         {/* Navigation */}
         <header className="mb-16 flex items-center justify-between">

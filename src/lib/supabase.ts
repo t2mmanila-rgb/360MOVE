@@ -113,13 +113,19 @@ export const getProfile = async (email: string) => {
   }
 };
 
-export const syncUserActivity = async (email: string, activityId: string, points: number = 0, profile?: any): Promise<void> => {
+export const syncUserActivity = async (
+  email: string, 
+  activityId: string, 
+  points: number = 0, 
+  profile?: any,
+  status: string = 'registered',
+  isOnsite: boolean = false
+): Promise<void> => {
   if (!supabaseUrl || !supabaseAnonKey) return;
 
   const lowerEmail = email.toLowerCase();
-  let userProfile = profile; // Use a local variable for the profile
+  let userProfile = profile;
 
-  // If a profile is provided, ensure it's synced first to satisfy foreign key constraints
   if (userProfile) {
     try {
       await syncProfile(userProfile, userProfile.profile_type || 'fitstreet');
@@ -128,13 +134,10 @@ export const syncUserActivity = async (email: string, activityId: string, points
     }
   }
 
-  console.log(`[Supabase] Syncing activity ${activityId} for user ${lowerEmail}...`);
   try {
-    // 1. Ensure profile exists first (retry/recovery logic)
     const { data: profileExists } = await supabase.from('profiles').select('email').ilike('email', lowerEmail).single();
     
     if (!profileExists && userProfile) {
-      console.log('Profile missing in Supabase during activity sync, creating...', lowerEmail);
       await syncProfile(userProfile, userProfile.profile_type || 'fitstreet'); 
     }
 
@@ -143,30 +146,24 @@ export const syncUserActivity = async (email: string, activityId: string, points
       .upsert({
         user_email: lowerEmail,
         activity_id: activityId,
-        points_awarded: points,
+        points_earned: points,
+        status: status,
+        is_onsite: isOnsite,
         registered_at: new Date().toISOString()
       }, { onConflict: 'user_email, activity_id' });
 
     if (error) {
       console.error('[Supabase] Activity sync error:', error);
-      
-      // If error is foreign key violation, try to resolve by creating profile if not already tried
-      if (error.code === '23503' && !userProfile) { // Use userProfile here
-        console.log('[Supabase] Retrying activity sync after creating missing profile...');
+      if (error.code === '23503' && !userProfile) {
         const stored = localStorage.getItem('user_profile') || localStorage.getItem('generic_user_profile');
         if (stored) {
           const parsed = JSON.parse(stored);
           await syncProfile(parsed, parsed.profile_type || 'fitstreet');
-          return syncUserActivity(email, activityId, points, parsed);
+          return syncUserActivity(email, activityId, points, parsed, status, isOnsite);
         }
-      }
-
-      if (typeof window !== 'undefined') {
-        alert(`⚠️ ACTIVITY SYNC FAILED: ${error.message}`);
       }
       throw error;
     }
-    console.log('[Supabase] Activity sync successful.');
   } catch (err) {
     console.warn('[Supabase] Activity sync failed:', err);
   }
