@@ -226,18 +226,24 @@ const AdminDashboard: React.FC = () => {
                   <span className="text-[10px] font-black uppercase tracking-tighter text-slate-700 leading-none">
                     {import.meta.env.VITE_SUPABASE_URL ? "Connected" : "Disconnected"}
                   </span>
-                  {import.meta.env.VITE_SUPABASE_URL && (
-                    <button 
-                      onClick={async () => {
+                  <button 
+                    onClick={async () => {
+                      if (!import.meta.env.VITE_SUPABASE_URL) {
+                        alert("❌ CONFIG ERROR: VITE_SUPABASE_URL is missing. If you are on a live site (Vercel), add it to your deployment settings. If local, restart your npm server.");
+                        return;
+                      }
+                      try {
                         const { supabase } = await import('../lib/supabase');
                         const { error } = await supabase.from('profiles').upsert({ email: 'test@360move.com', name: 'System Test' });
-                        alert(error ? `❌ Error: ${error.message}` : "✅ Success! Connection verified.");
-                      }}
-                      className="text-[8px] font-black text-brand-purple hover:underline"
-                    >
-                      (Test Now)
-                    </button>
-                  )}
+                        alert(error ? `❌ Supabase Error: ${error.message}` : "✅ Success! Database is reachable.");
+                      } catch (err) {
+                        alert(`❌ JS Error: ${err instanceof Error ? err.message : String(err)}`);
+                      }
+                    }}
+                    className="text-[8px] font-black text-brand-purple hover:underline"
+                  >
+                    (Test Now)
+                  </button>
                 </div>
               </div>
             </div>
