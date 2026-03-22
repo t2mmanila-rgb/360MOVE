@@ -493,7 +493,7 @@ const MyPass: React.FC = () => {
             </button>
             <div>
               <h1 className="text-3xl font-black italic tracking-tighter uppercase italic">
-                Hala, {firstName}!
+                Welcome, {firstName}!
               </h1>
               <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mt-1">ID: {passId}</p>
             </div>

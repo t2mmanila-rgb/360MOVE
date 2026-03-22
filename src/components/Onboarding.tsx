@@ -229,6 +229,18 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
                   <option value="Female" className="bg-slate-900">Female</option>
                   <option value="Non-binary" className="bg-slate-900">Non-binary</option>
                 </select>
+                <select 
+                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer col-span-2"
+                  value={formData.city}
+                  onChange={e => setFormData({...formData, city: e.target.value})}
+                >
+                  <option value="" className="bg-slate-900">City</option>
+                  <option value="Taguig" className="bg-slate-900">Taguig (BGC)</option>
+                  <option value="Makati" className="bg-slate-900">Makati</option>
+                  <option value="Manila" className="bg-slate-900">Manila</option>
+                  <option value="Quezon City" className="bg-slate-900">Quezon City</option>
+                  <option value="Other" className="bg-slate-900">Other</option>
+                </select>
               </div>
 
               <button 

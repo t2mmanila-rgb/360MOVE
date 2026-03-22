@@ -45,6 +45,10 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
     
     // Sync to Supabase
     try {
+      if (!updatedProfile.email) {
+        if (typeof window !== 'undefined') alert('⚠️ SYNC ERROR: Profile email missing. Please try logging out and in again.');
+        throw new Error('Profile email missing');
+      }
       const { syncProfile } = await import('../lib/supabase');
       const profileType = storageKey.includes('generic') ? 'generic' : 'fitstreet';
       await syncProfile(updatedProfile, profileType as any);
@@ -65,8 +69,8 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
 
   const handleShare = async () => {
     const shareData = {
-      title: 'Fitstreet 2026 Corporate Offers',
-      text: 'Check out these exclusive corporate wellness offers for our team!',
+      title: 'Fitstreet 2026 Corporate Challenge',
+      text: 'Join the corporate challenge at Fitstreet 2026 happening this May 9-10. Visit:',
       url: 'https://360corp.vercel.app/corporate-offers'
     };
 
@@ -131,7 +135,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
               <div className="space-y-6 mb-10">
                 <div className="grid grid-cols-2 gap-4">
                   <select 
-                    className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-orange transition-all"
+                    className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-orange transition-all"
                     value={formData.fitnessLevel}
                     onChange={e => setFormData({...formData, fitnessLevel: e.target.value})}
                   >
@@ -142,11 +146,12 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                     <option value="Athlete" className="bg-fs-dark">Athlete</option>
                   </select>
                   <select 
-                    className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-orange transition-all"
+                    className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-orange transition-all"
                     value={formData.workoutFrequency}
                     onChange={e => setFormData({...formData, workoutFrequency: e.target.value})}
                   >
                     <option value="" className="bg-fs-dark">Frequency</option>
+                    <option value="0-1 a week" className="bg-fs-dark">0-1 a week</option>
                     <option value="1-2x week" className="bg-fs-dark">1-2x week</option>
                     <option value="3-4x week" className="bg-fs-dark">3-4x week</option>
                     <option value="5+ times" className="bg-fs-dark">5+ times</option>
@@ -155,13 +160,13 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                 <div className="grid grid-cols-2 gap-4">
                   <input 
                     type="text" 
-                    placeholder="Years active in fitness"
-                    className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-orange transition-all"
+                    placeholder="Years active"
+                    className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-orange transition-all"
                     value={formData.yearsActive}
                     onChange={e => setFormData({...formData, yearsActive: e.target.value})}
                   />
                   <select 
-                    className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-orange transition-all"
+                    className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-orange transition-all"
                     value={formData.preferredTime}
                     onChange={e => setFormData({...formData, preferredTime: e.target.value})}
                   >
@@ -172,7 +177,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                   </select>
                 </div>
                 <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-orange transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-orange transition-all"
                   value={formData.trainingGoal}
                   onChange={e => setFormData({...formData, trainingGoal: e.target.value})}
                 >
@@ -207,18 +212,18 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
               <div className="space-y-6 mb-10">
                 <div className="grid grid-cols-2 gap-4">
                   <select 
-                    className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-cyan transition-all"
+                    className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-cyan transition-all"
                     value={formData.dietType}
                     onChange={e => setFormData({...formData, dietType: e.target.value})}
                   >
                     <option value="" className="bg-fs-dark">Diet Type</option>
-                    <option value="None / Balanced" className="bg-fs-dark">None / Balanced</option>
+                    <option value="None / Balanced" className="bg-fs-dark">Balanced</option>
                     <option value="High-protein" className="bg-fs-dark">High-protein</option>
                     <option value="Vegan / Vegetarian" className="bg-fs-dark">Vegan / Vegetarian</option>
                     <option value="Keto / Low carb" className="bg-fs-dark">Keto / Low carb</option>
                   </select>
                   <select 
-                    className="bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-cyan transition-all"
+                    className="bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-cyan transition-all"
                     value={formData.workSetup}
                     onChange={e => setFormData({...formData, workSetup: e.target.value})}
                   >
@@ -233,10 +238,11 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                 <input 
                   type="text" 
                   placeholder="Occupation / Industry"
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-cyan transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-2xl px-4 py-4 text-xs font-bold text-white outline-none focus:border-fs-cyan transition-all"
                   value={formData.occupation}
                   onChange={e => setFormData({...formData, occupation: e.target.value})}
                 />
+
 
                 {formData.workSetup === 'Corporate' && (
                   <motion.input 
@@ -250,17 +256,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                   />
                 )}
 
-                <select 
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm font-bold text-white outline-none focus:border-fs-cyan transition-all"
-                  value={formData.incomeBracket}
-                  onChange={e => setFormData({...formData, incomeBracket: e.target.value})}
-                >
-                  <option value="" className="bg-fs-dark">Income Bracket (Optional)</option>
-                  <option value="Entry Level" className="bg-fs-dark">Entry Level</option>
-                  <option value="Mid-Management" className="bg-fs-dark">Mid-Management</option>
-                  <option value="Executive" className="bg-fs-dark">Executive</option>
-                  <option value="Ultra-High" className="bg-fs-dark">Ultra-High Net Worth</option>
-                </select>
+
               </div>
 
               <button 
