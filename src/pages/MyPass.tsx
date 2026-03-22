@@ -881,15 +881,6 @@ const MyPass: React.FC = () => {
                 >
                   Close Profile
                 </button>
-                <button 
-                  onClick={() => {
-                    localStorage.clear();
-                    window.location.href = '/';
-                  }}
-                  className="w-full py-4 bg-red-500/10 border border-red-500/30 text-red-500 rounded-2xl font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-colors"
-                >
-                  Clear Data & Start Over
-                </button>
               </div>
             </motion.div>
           </div>
