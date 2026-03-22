@@ -244,6 +244,21 @@ const AdminDashboard: React.FC = () => {
                   >
                     (Test Now)
                   </button>
+                  <button 
+                    onClick={async () => {
+                      try {
+                        const { migrateLocalData } = await import('../lib/supabase');
+                        const res = await migrateLocalData();
+                        alert(`✅ Sync Complete!\nProfiles: ${res?.profiles || 0}\nActivities: ${res?.activities || 0}\n\nRefresh to see live data.`);
+                        window.location.reload();
+                      } catch (err) {
+                        alert(`❌ Sync Error: ${err instanceof Error ? err.message : String(err)}`);
+                      }
+                    }}
+                    className="text-[8px] font-black text-fs-orange hover:underline ml-2"
+                  >
+                    (Sync Local Data)
+                  </button>
                 </div>
               </div>
             </div>

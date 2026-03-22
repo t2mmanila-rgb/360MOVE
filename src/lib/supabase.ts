@@ -95,3 +95,48 @@ export const deleteUserActivity = async (email: string, activityId: string) => {
     console.warn('Supabase activity deletion failed:', err);
   }
 };
+
+/**
+ * Migration helper to move legacy localStorage data to Supabase
+ */
+export const migrateLocalData = async () => {
+  if (!supabaseUrl || !supabaseAnonKey) return;
+
+  const results = { profiles: 0, activities: 0 };
+
+  // 1. Migrate Fitstreet Profile
+  const fsProfile = localStorage.getItem('user_profile');
+  if (fsProfile) {
+    try {
+      const parsed = JSON.parse(fsProfile);
+      if (parsed.email) {
+        await syncProfile(parsed, 'fitstreet');
+        results.profiles++;
+        
+        // Migrate registrations
+        const regIds = localStorage.getItem('registered_activity_ids');
+        if (regIds) {
+          const ids = JSON.parse(regIds);
+          for (const id of ids) {
+            await syncUserActivity(parsed.email, id);
+            results.activities++;
+          }
+        }
+      }
+    } catch (err) { console.error('Migration error (FS):', err); }
+  }
+
+  // 2. Migrate Generic Registration
+  const genProfile = localStorage.getItem('generic_user_profile');
+  if (genProfile) {
+    try {
+      const parsed = JSON.parse(genProfile);
+      if (parsed.email) {
+        await syncProfile(parsed, 'generic');
+        results.profiles++;
+      }
+    } catch (err) { console.error('Migration error (Generic):', err); }
+  }
+
+  return results;
+};
