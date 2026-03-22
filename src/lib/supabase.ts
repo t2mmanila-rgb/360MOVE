@@ -29,6 +29,7 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
       points: profile.points,
       profile_completed: !!profile.profileCompleted,
       points_profile_completion: profile.pointsProfileCompletion || 0,
+      points_hr_share: profile.pointsHRShare || 0,
       points_shared: !!profile.pointsShared,
       occupation: profile.occupation,
       updated_at: new Date().toISOString()

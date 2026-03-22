@@ -280,10 +280,11 @@ const MyPass: React.FC = () => {
       return total + 0;
     }, 0);
 
-    const profilePoints = (userProfile?.profileCompleted ? 1 : 0);
+    const profilePoints = (userProfile?.profileCompleted ? 10 : 0);
     const sharePoints = userProfile?.pointsHRShare || 0;
+    const starterPoints = 1;
     
-    return passportPoints + registrationPoints + profilePoints + sharePoints;
+    return starterPoints + passportPoints + registrationPoints + profilePoints + sharePoints;
   };
 
   const handlePointsEarned = async (updatedProfile: any) => {

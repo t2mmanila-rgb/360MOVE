@@ -92,15 +92,22 @@ const GenericDashboard: React.FC = () => {
   };
 
   const calculatePoints = () => {
-    let points = genericUser?.points || 1;
+    // 1. Initial starter point (1)
+    const starterPoints = 1;
     
-    // Add points for registered programs
+    // 2. Extra points from profile completion (10)
+    const profilePoints = genericUser?.profileCompleted ? 10 : 0;
+    
+    // 3. Points from HR Share (10)
+    const sharePoints = genericUser?.pointsHRShare || 0;
+
+    // 4. Points from registered programs
     const registeredPoints = registeredPrograms.reduce((total, id) => {
       const prog = B2CConfig.find(p => p.id === id);
       return total + (prog?.points || 10);
     }, 0);
 
-    return points + registeredPoints;
+    return starterPoints + profilePoints + sharePoints + registeredPoints;
   };
 
   const handlePointsEarned = async (updatedProfile: any) => {
