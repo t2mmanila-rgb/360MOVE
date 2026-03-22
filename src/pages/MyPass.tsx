@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   QrCode, Star, MapPin, Zap, LayoutDashboard, Map as MapIcon, 
-  User, Calendar, CheckCircle2, Globe, ArrowRight, X, Clock, Info, Utensils
+  User, Calendar, CheckCircle2, Globe, ArrowRight, X, Clock, Info
 } from 'lucide-react';
 import { B2B_PASSPORT_BRANDS, type Activity, type PassportBrand } from '../data/activities';
 import { useActivity } from '../lib/useActivity';
@@ -339,16 +339,17 @@ const MyPass: React.FC = () => {
     }
   };
 
-  const recommendedActivities = (schedule || []).filter(act => {
+  const recommendedActivities = React.useMemo(() => {
     const all = [...activities];
     if (!userInterests.length) return all.slice(0, 3);
+    
     return all.filter(act => 
       userInterests.some((interest: string) => 
         act.category?.toLowerCase().includes(interest.split(' ')[0].toLowerCase()) ||
         interest.toLowerCase().includes(act.category?.toLowerCase() || '')
       )
     ).slice(0, 3);
-  }, [userInterests]);
+  }, [userInterests, activities]);
 
   const zones = ['THE ARENA', 'PLAY', 'HEAL', 'EAT', 'GLOW'] as const;
 

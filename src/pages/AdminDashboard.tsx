@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, BarChart3, Edit3, Save, Trash2, Calendar, Clock, MapPin, 
-  ChevronRight, Plus, X, Search, Filter, Download, CheckSquare, Square,
+  Users, BarChart3, Edit3, Save, Trash2, 
+  Search, CheckSquare, Square,
   Activity, Target, Zap, Sparkles, Lock, Settings, PieChart, Heart, QrCode,
-  Activity as ActivityIcon, Utensils
+  Utensils
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useActivity } from '../lib/useActivity';
