@@ -31,22 +31,8 @@ const AdminDashboard: React.FC = () => {
 
   const fetchAttendees = async (activityId: string) => {
     setIsAttendeesLoading(true);
-    console.log('[Admin] Fetching attendees for:', activityId);
     try {
-      // 1. Try a super-minimal select first to confirm the activity_id exists
-      const { data: testData, error: testError } = await supabase
-        .from('user_activities')
-        .select('id')
-        .eq('activity_id', activityId);
-
-      if (testError) {
-        alert("⚠️ DB Error: " + testError.message);
-        throw testError;
-      }
-
-      console.log(`[Admin] DB Rows found for ${activityId}:`, testData?.length);
-
-      // 2. Try the full select with profiles
+      // 1. Try a more resilient query: Fetch minimal data first to avoid join failures
       const { data, error } = await supabase
         .from('user_activities')
         .select(`
@@ -64,49 +50,45 @@ const AdminDashboard: React.FC = () => {
         .order('registered_at', { ascending: false });
 
       if (error) {
-         console.warn('[Admin] Profile join failed, showing minimal data...', error.message);
-         // Fallback: Just the activity data + email
-         const { data: minimalData, error: minimalError } = await supabase
-           .from('user_activities')
-           .select(`
-             id,
-             user_email,
-             registered_at,
-             is_onsite
-           `)
-           .eq('activity_id', activityId)
-           .order('registered_at', { ascending: false });
+        // If it's a "column does not exist" error (PGRST204), try an even more minimal version
+        if (error.message.includes('is_onsite') || error.message.includes('profiles')) {
+           const { data: ultraMinimal, error: ultraError } = await supabase
+             .from('user_activities')
+             .select('id, user_email, registered_at')
+             .eq('activity_id', activityId)
+             .order('registered_at', { ascending: false });
            
-         if (minimalError) {
-           alert("⚠️ Fallback Error: " + minimalError.message);
-           throw minimalError;
-         }
-         setAttendees(minimalData || []);
-         return;
+           if (ultraError) throw ultraError;
+           
+           // Map missing field to false if it's missing in DB
+           setAttendees((ultraMinimal || []).map(row => ({ ...row, is_onsite: false })));
+           return;
+        }
+        throw error;
       }
       
       setAttendees(data || []);
     } catch (err) {
       console.error('Error fetching attendees:', err);
-      const msg = err instanceof Error ? err.message : String(err);
-      if (msg.includes('PGRST204')) {
-        alert("⚠️ SCHEMA ERROR: Please run the SQL migration I provided in Supabase.");
-      } else {
-        alert("⚠️ Fetch Failed: " + msg + " for ID: " + activityId);
-      }
     } finally {
       setIsAttendeesLoading(false);
     }
   };
 
-  const handleToggleOnsite = async (registrationId: number, currentStatus: boolean) => {
+  const handleToggleOnsite = async (registrationId: string, currentStatus: boolean) => {
     try {
       const { error } = await supabase
         .from('user_activities')
         .update({ is_onsite: !currentStatus })
         .eq('id', registrationId);
 
-      if (error) throw error;
+      if (error) {
+        if (error.message.includes('is_onsite')) {
+          alert("⚠️ DATABASE UPDATE FAILED: Your Supabase table is missing the 'is_onsite' column. Please run the SQL migration.");
+          return;
+        }
+        throw error;
+      }
       
       // Update local state
       setAttendees(prev => prev.map(a => 
@@ -143,9 +125,7 @@ const AdminDashboard: React.FC = () => {
 
   const fetchStats = async () => {
     try {
-      const { supabase } = await import('../lib/supabase');
-      
-      // Fetch all profiles
+      // 1. Fetch all profiles
       const { data: profiles, error } = await supabase
         .from('profiles')
         .select('*');
