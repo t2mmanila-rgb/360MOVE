@@ -28,6 +28,7 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
       profile_type: type,
       points: profile.points,
       profile_completed: !!profile.profileCompleted,
+      points_shared: !!profile.pointsShared,
       updated_at: new Date().toISOString()
     };
 

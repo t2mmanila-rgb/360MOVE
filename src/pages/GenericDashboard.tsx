@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Zap, Star, X, MapPin, Clock, ArrowRight, CheckCircle2 } from 'lucide-react';
+import { Calendar, Zap, Star, X, MapPin, Clock, ArrowRight, CheckCircle2, Globe } from 'lucide-react';
 import { type Activity } from '../data/activities';
 import { useActivity } from '../lib/useActivity';
 import EarnPointsModal from '../components/EarnPointsModal';
@@ -115,6 +115,36 @@ const GenericDashboard: React.FC = () => {
     }
 
     localStorage.setItem('generic_user_profile', JSON.stringify(updatedProfile));
+  };
+
+  const handleShareFitstreet = async () => {
+    const shareData = {
+      title: 'Join me at Fitstreet 2026!',
+      text: 'I just got my Fitstreet Fast-Pass! Join the movement and earn rewards. Visit:',
+      url: 'https://360move.vercel.app/events/fitstreet-2026'
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
+      }
+
+      // Award 10 points if not already shared
+      if (!genericUser?.pointsShared) {
+        const updatedProfile = {
+          ...genericUser,
+          pointsShared: true
+        };
+        handlePointsEarned(updatedProfile);
+        alert('🎉 10 Bonus Points awarded for sharing!');
+      } else {
+        alert('You already earned points for sharing, but thanks for spreading the word!');
+      }
+    } catch (err) {
+      console.warn('Share failed:', err);
+    }
   };
 
   const displayName = genericUser?.name || "Member";
@@ -271,6 +301,24 @@ const GenericDashboard: React.FC = () => {
             </button>
           </div>
         )}
+
+        <button 
+          onClick={handleShareFitstreet}
+          className="w-full bg-brand-purple/5 border border-brand-purple/10 rounded-[2rem] p-6 mb-12 flex items-center justify-between group hover:bg-brand-purple/10 transition-all text-slate-900"
+        >
+          <div className="flex items-center gap-4 text-left">
+            <div className="w-12 h-12 bg-brand-purple rounded-2xl flex items-center justify-center shadow-lg shadow-brand-purple/20 group-hover:scale-110 transition-transform">
+              <Globe className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="text-[10px] font-black uppercase tracking-widest text-brand-purple mb-1">Spread the Word</div>
+              <div className="text-sm font-bold">Share FITSTREET and earn 10 extra points!</div>
+            </div>
+          </div>
+          <ArrowRight className="w-5 h-5 text-brand-purple group-hover:translate-x-2 transition-transform" />
+        </button>
+
+        {/* B2C Programs Sections */}
 
         {/* Available Programs */}
         <div className="mb-12">

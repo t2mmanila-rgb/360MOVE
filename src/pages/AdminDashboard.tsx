@@ -422,6 +422,41 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </div>
                 </div>
+
+                {/* Activity Signup Table */}
+                <div className="bg-white rounded-[4rem] p-12 text-slate-900 shadow-xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-10">
+                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Activity Signups.</h3>
+                    <div className="px-4 py-1 bg-fs-cyan/10 rounded-full text-[10px] font-black text-fs-cyan uppercase tracking-widest">Live Multi-User Sync</div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[800px] overflow-y-auto pr-4 scrollbar-thin">
+                    {[...schedule, ...programs].map((act) => {
+                      const count = stats.activityCounts?.[act.id] || 0;
+                      return (
+                        <div key={act.id} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 hover:border-fs-cyan/30 transition-all flex items-center justify-between group">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-200 shrink-0">
+                              <img src={act.image} alt="" className="w-full h-full object-cover" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-black text-slate-900 uppercase italic truncate max-w-[120px]">{act.title}</div>
+                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{act.category}</div>
+                            </div>
+                          </div>
+                          <div className="flex flex-col items-end">
+                            <span className={cn(
+                              "text-2xl font-black italic",
+                              count > 0 ? "text-fs-cyan" : "text-slate-300"
+                            )}>
+                              {count}
+                            </span>
+                            <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 leading-none">Registered</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}

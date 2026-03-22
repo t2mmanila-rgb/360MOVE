@@ -27,6 +27,15 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleLogout = () => {
+    localStorage.removeItem('user_profile');
+    localStorage.removeItem('generic_user_profile');
+    localStorage.removeItem('is_generic_logged_in');
+    localStorage.removeItem('is_fitstreet_logged_in');
+    // Clear admin auth too if desired, but user mainly wants profile testing
+    window.location.href = '/';
+  };
+
   const navLinks = [
     { name: 'Home', href: '/', icon: Home },
     { name: 'Programs', href: '/programs', icon: Grid },
@@ -104,6 +113,14 @@ const Navbar: React.FC = () => {
             <button className="p-2 text-white/60 hover:text-fs-cyan transition-colors">
               <MapPin className="w-5 h-5" />
             </button>
+            { (userProfile || genericUser) && (
+              <button 
+                onClick={handleLogout}
+                className="text-[10px] font-black uppercase tracking-widest text-slate-500 hover:text-red-500 transition-colors px-2"
+              >
+                Log Out
+              </button>
+            )}
             {location.pathname.includes('/events/fitstreet-2026') ? (
               <button 
                 onClick={() => window.dispatchEvent(new CustomEvent('open-onboarding'))}
@@ -146,6 +163,14 @@ const Navbar: React.FC = () => {
                 {link.name}
               </Link>
             ))}
+            {(userProfile || genericUser) && (
+              <button 
+                onClick={handleLogout}
+                className="text-2xl font-black text-red-500 text-left border-b border-slate-100 pb-4"
+              >
+                Log Out
+              </button>
+            )}
           </div>
         </div>
       )}

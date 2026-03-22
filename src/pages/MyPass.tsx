@@ -1,6 +1,9 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, MapPin, Info, ArrowRight, Zap, Star, User, Clock } from 'lucide-react';
+import { 
+  QrCode, Star, MapPin, Zap, LayoutDashboard, Map as MapIcon, 
+  User, Calendar, CheckCircle2, Globe, ArrowRight, X, Clock, Info, Utensils
+} from 'lucide-react';
 import { B2B_PASSPORT_BRANDS, type Activity, type PassportBrand } from '../data/activities';
 import { useActivity } from '../lib/useActivity';
 import { resolveDriveImageUrl, logRegistrationToSheet, syncUserProfileToSheet, fetchGoogleSheetData, PASSPORT_CHALLENGE_SHEET_ID } from '../lib/google-sheets';
@@ -301,7 +304,42 @@ const MyPass: React.FC = () => {
 
   const userInterests = userProfile?.categories || userProfile?.interests || [];
 
-  const recommendedActivities = React.useMemo(() => {
+  const handleShareFitstreet = async () => {
+    const shareData = {
+      title: 'Join me at Fitstreet 2026!',
+      text: 'I just got my Fitstreet Fast-Pass! Join the movement and earn rewards. Visit:',
+      url: 'https://360move.vercel.app/events/fitstreet-2026'
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
+      }
+
+      // Award 10 points if not already shared
+      if (!userProfile?.pointsShared) {
+        const updatedProfile = {
+          ...userProfile,
+          points: (userProfile?.points || 0) + 10,
+          pointsShared: true
+        };
+        setUserProfile(updatedProfile);
+        localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
+        
+        const { syncProfile } = await import('../lib/supabase');
+        await syncProfile(updatedProfile, 'fitstreet');
+        alert('🎉 10 Bonus Points awarded for sharing!');
+      } else {
+        alert('You already earned points for sharing, but thanks for spreading the word!');
+      }
+    } catch (err) {
+      console.warn('Share failed:', err);
+    }
+  };
+
+  const recommendedActivities = (schedule || []).filter(act => {
     const all = [...activities];
     if (!userInterests.length) return all.slice(0, 3);
     return all.filter(act => 
@@ -559,6 +597,22 @@ const MyPass: React.FC = () => {
               </button>
             </div>
           </div>
+
+          <button 
+            onClick={handleShareFitstreet}
+            className="w-full bg-fs-cyan/10 border border-fs-cyan/20 rounded-[2rem] p-6 mb-12 flex items-center justify-between group hover:bg-fs-cyan/20 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 bg-fs-cyan rounded-2xl flex items-center justify-center shadow-lg shadow-fs-cyan/20 group-hover:scale-110 transition-transform">
+                <Globe className="w-6 h-6 text-slate-900" />
+              </div>
+              <div className="text-left">
+                <div className="text-[10px] font-black uppercase tracking-widest text-fs-cyan mb-1">Spread the Word</div>
+                <div className="text-sm font-bold text-white">Share FITSTREET and earn 10 extra points!</div>
+              </div>
+            </div>
+            <ArrowRight className="w-5 h-5 text-fs-cyan group-hover:translate-x-2 transition-transform" />
+          </button>
 
           {/* Suggested Activities */}
           <div className="mb-12">
