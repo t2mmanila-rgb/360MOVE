@@ -43,6 +43,11 @@ const parseCSV = (csv: string) => {
 export const resolveDriveImageUrl = (linkOrId: string) => {
   if (!linkOrId) return '';
   
+  // If it's a local path or a non-Google Drive absolute URL, return as is
+  if (linkOrId.startsWith('/') || (linkOrId.startsWith('http') && !linkOrId.includes('drive.google.com'))) {
+    return linkOrId;
+  }
+  
   let fileId = linkOrId.trim();
 
   if (fileId.startsWith('http')) {
