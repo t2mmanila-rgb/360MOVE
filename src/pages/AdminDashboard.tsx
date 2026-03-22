@@ -4,7 +4,7 @@ import {
   BarChart3, Users, Search, QrCode,
   Activity, Target, Zap, 
   Sparkles, Lock, Settings, PieChart, 
-  Save, Edit3, Trash2, Heart
+  Save, Edit3, Trash2, Heart, Utensils
 } from 'lucide-react';
 import { useActivity } from '../lib/useActivity';
 import { cn } from '../lib/utils';
@@ -46,15 +46,19 @@ const AdminDashboard: React.FC = () => {
 
         // Age demographics from DB
         const ageCounts: Record<string, number> = {};
+        let totalWithAge = 0;
         profiles.forEach(p => {
-          if (p.age_range) ageCounts[p.age_range] = (ageCounts[p.age_range] || 0) + 1;
+          if (p.age_range) {
+            ageCounts[p.age_range] = (ageCounts[p.age_range] || 0) + 1;
+            totalWithAge++;
+          }
         });
         
         const demo = [
-          { label: '18-24', val: ageCounts['18-24'] || 0, color: 'fs-cyan' },
-          { label: '25-34', val: ageCounts['25-34'] || 0, color: 'fs-orange' },
-          { label: '35-44', val: ageCounts['35-44'] || 0, color: 'brand-purple' },
-          { label: '45+', val: ageCounts['45+'] || 0, color: 'fs-pink' }
+          { label: '18-24', val: totalWithAge > 0 ? (ageCounts['18-24'] || 0) / totalWithAge * 100 : 0, count: ageCounts['18-24'] || 0, color: 'fs-cyan' },
+          { label: '25-34', val: totalWithAge > 0 ? (ageCounts['25-34'] || 0) / totalWithAge * 100 : 0, count: ageCounts['25-34'] || 0, color: 'fs-orange' },
+          { label: '35-44', val: totalWithAge > 0 ? (ageCounts['35-44'] || 0) / totalWithAge * 100 : 0, count: ageCounts['35-44'] || 0, color: 'brand-purple' },
+          { label: '45+', val: totalWithAge > 0 ? (ageCounts['45+'] || 0) / totalWithAge * 100 : 0, count: ageCounts['45+'] || 0, color: 'fs-pink' }
         ];
 
         // Categories/Interests
@@ -340,10 +344,11 @@ const AdminDashboard: React.FC = () => {
                   </div>
                   <div className="space-y-8">
                     {[
-                      { label: 'The Arena', pct: 85, color: 'fs-orange', icon: Zap },
-                      { label: 'Zen Garden', pct: 64, color: 'fs-cyan', icon: Sparkles },
-                      { label: 'Beat Box', pct: 52, color: 'fs-pink', icon: Target },
-                      { label: 'Recovery Lounge', pct: 38, color: 'fs-lime', icon: Heart }
+                      { label: 'The ARENA', pct: 85, color: 'fs-orange', icon: Zap },
+                      { label: 'EAT Zone', pct: 64, color: 'fs-cyan', icon: Utensils },
+                      { label: 'PLAY Zone', pct: 52, color: 'fs-pink', icon: Target },
+                      { label: 'HEAL Zone', pct: 38, color: 'fs-lime', icon: Heart },
+                      { label: 'GLOW Zone', pct: 25, color: 'brand-purple', icon: Sparkles }
                     ].map((zone) => (
                       <div key={zone.label} className="group">
                         <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
@@ -409,7 +414,7 @@ const AdminDashboard: React.FC = () => {
                           className={cn("w-full rounded-2xl relative group cursor-pointer", `bg-${bar.color} scroll-shadow`)}
                         >
                           <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {bar.val}%
+                            {bar.count} Users ({Math.round(bar.val)}%)
                           </div>
                         </motion.div>
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{bar.label}</span>
