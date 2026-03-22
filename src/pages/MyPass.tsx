@@ -59,11 +59,11 @@ const MyPass: React.FC = () => {
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);
     const scanId = params.get('scan');
-    if (scanId && brands.length > 0 && userProfile) {
+    if (scanId && userProfile) {
       handleScanSuccess(scanId);
       navigate('/my-pass', { replace: true });
     }
-  }, [location.search, brands, userProfile, navigate]);
+  }, [location.search, userProfile, navigate, brands]); // Add brands to deps just in case handleScanSuccess uses them
 
   // Sync profile from Supabase
   React.useEffect(() => {
@@ -186,53 +186,89 @@ const MyPass: React.FC = () => {
   };
 
   const handleScanSuccess = async (decodedTextValue: string) => {
-    // In a real app, decodedTextValue would contain the brand ID or a secure token
-    // For this simulation, we'll mark the first uncompleted brand as completed
-    const brandId = decodedTextValue; // Assuming decodedTextValue is the brand ID
-    const brand = brands.find(b => b.id === brandId);
-    if (brand && !completedIds.includes(brand.id)) {
-      const newCompleted = [...completedIds, brand.id];
-      setCompletedIds(newCompleted);
-      localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
-      
-      logRegistrationToSheet('https://script.google.com/macros/s/AKfycbz_placeholder/exec', {
-        userId: userProfile?.mobile || 'unknown',
-        userName: userProfile?.name || 'Guest',
-        activityId: brand.id,
-        activityTitle: brand.name,
-        type: 'brand',
-        timestamp: new Date().toISOString()
-      });
-      
-      setView('passport'); // Auto-return to passport challenge
-      
-      const isPaid = brand.id === 'pb-gballers' || brand.id === 'pb-viking';
-      const pointsAdded = isPaid ? 10 : 1;
+    if (!userProfile?.email) {
+      alert("Please log in to scan and earn points.");
+      return;
+    }
 
-      const updated = {
-        ...userProfile,
-        pointsScans: (userProfile?.pointsScans || 0) + 1,
-        points: (userProfile?.points || 0) + pointsAdded
-      };
-      setUserProfile(updated);
-      localStorage.setItem('user_profile', JSON.stringify(updated));
-      
-      // Sync to Supabase
-      try {
-        const { syncProfile, syncUserActivity } = await import('../lib/supabase');
-        await syncProfile(updated, 'fitstreet');
-        // Record the specific booth scan as a completed activity
-        if (updated.email) {
-          await syncUserActivity(updated.email, brand.id, pointsAdded);
+    const query = decodedTextValue.toLowerCase().trim();
+    const slugQuery = query.replace(/\s+/g, '-');
+
+    // 1. Check if it's a Brand/Booth
+    const brand = [...brands, ...B2B_PASSPORT_BRANDS].find(b => 
+      b.id.toLowerCase() === query ||
+      b.id.toLowerCase() === `pb-${query}` ||
+      b.name.toLowerCase().includes(query) ||
+      query.includes(b.name.toLowerCase())
+    );
+    
+    // 2. Check if it's an Activity
+    const activity = allActivities.find(a => 
+      a.id.toLowerCase() === query ||
+      a.id.toLowerCase() === `fs-${slugQuery}` ||
+      a.id.toLowerCase().replace(/\s+/g, '-') === slugQuery ||
+      a.title?.toLowerCase().replace(/\s+/g, '-') === slugQuery ||
+      a.title?.toLowerCase().includes(query)
+    );
+
+    if (brand) {
+      if (!completedIds.includes(brand.id)) {
+        const newCompleted = [...completedIds, brand.id];
+        setCompletedIds(newCompleted);
+        localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
+        
+        const isPaid = brand.id === 'pb-gballers' || brand.id === 'pb-viking';
+        const pointsAdded = isPaid && (userProfile?.paidActivities?.includes(brand.id)) ? 10 : 1;
+
+        const updated = {
+          ...userProfile,
+          points: (userProfile?.points || 0) + pointsAdded
+        };
+        setUserProfile(updated);
+        localStorage.setItem('user_profile', JSON.stringify(updated));
+        
+        // Sync to Supabase
+        try {
+          const { syncUserActivity } = await import('../lib/supabase');
+          await syncUserActivity(updated.email, brand.id, pointsAdded, updated, 'completed', true);
+        } catch (err) {
+          console.warn('Supabase scan sync failed:', err);
         }
-      } catch (err) {
-        console.warn('Supabase scan sync failed:', err);
+
+        setSuccessActivity({
+          id: brand.id,
+          title: brand.name,
+          points: pointsAdded,
+          category: brand.category,
+          image: brand.logo,
+          duration: 'Booth Visit',
+          location: brand.booth,
+          description: brand.description
+        } as any);
+        setShowSuccessModal(true);
+        setView('passport');
+      }
+    } else if (activity) {
+      // Activity Scan logic - Mark as both Registered and Participated (Checked-in)
+      if (!registeredActivityIds.includes(activity.id)) {
+        const newRegistered = [...registeredActivityIds, activity.id];
+        setRegisteredActivityIds(newRegistered);
+        localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
       }
 
-      syncUserProfileToSheet(updated);
-
-      // Auto-open success state feedback
-      alert(`SUCCESS! Scanned ${brand.name}. ${pointsAdded} Point${pointsAdded > 1 ? 's' : ''} Added to your Pass.`);
+      setSuccessActivity(activity);
+      setShowSuccessModal(true);
+      
+      // Sync to Supabase (Record as Check-in/Participated)
+      try {
+        const { syncUserActivity } = await import('../lib/supabase');
+        await syncUserActivity(userProfile.email!, activity.id, activity.points, userProfile, 'checked-in', true);
+      } catch (err) {
+        console.warn('Supabase activity scan sync failed:', err);
+      }
+    } else {
+      console.warn('Scanned ID not recognized:', query);
+      alert("QR code recognized but not linked to any valid activity or booth.");
     }
   };
 
