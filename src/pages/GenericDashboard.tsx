@@ -163,137 +163,7 @@ const GenericDashboard: React.FC = () => {
   const firstName = (genericUser?.name?.split(' ')[0] || "Member").toUpperCase();
   const totalPoints = calculatePoints();
 
-  const DetailModal = () => (
-    <AnimatePresence>
-      {selectedProgram && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl">
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            className="w-full max-w-lg bg-white rounded-[2rem] overflow-hidden shadow-2xl relative max-h-[90vh] flex flex-col"
-          >
-            <button
-              onClick={() => setSelectedProgram(null)}
-              className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors"
-            >
-              <X className="w-5 h-5" />
-            </button>
-            
-            <div className="h-48 relative shrink-0">
-              <img src={selectedProgram.image} alt={selectedProgram.title} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
-              <div className="absolute bottom-4 left-6 right-6">
-                <div className="text-[10px] font-black uppercase tracking-widest text-brand-turquoise mb-1 flex items-center gap-2">
-                  <Star className="w-3 h-3 fill-brand-turquoise" />
-                  {selectedProgram.category} 
-                </div>
-                <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">
-                  {selectedProgram.title}
-                </h3>
-              </div>
-            </div>
 
-            <div className="p-8 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-4 mb-8">
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2 text-slate-400 mb-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Date</span>
-                  </div>
-                  <div className="text-sm font-black text-slate-900 truncate">
-                    {selectedProgram.day || 'May 9, 2026'}
-                  </div>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                  <div className="flex items-center gap-2 text-slate-400 mb-1">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Time</span>
-                  </div>
-                  <div className="text-sm font-black text-slate-900 truncate">
-                    {selectedProgram.time || 'All Day'}
-                  </div>
-                </div>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 col-span-2">
-                  <div className="flex items-center gap-2 text-slate-400 mb-1">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span className="text-[10px] font-bold uppercase tracking-wider">Location</span>
-                  </div>
-                  <div className="text-sm font-black text-slate-900">
-                    {selectedProgram.location || 'BGC Amphitheater'}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-6 mb-8">
-                <div>
-                  <h4 className="flex items-center gap-2 text-fs-orange font-black text-[10px] uppercase tracking-widest mb-3">
-                    <Zap className="w-4 h-4 fill-fs-orange" /> About the Challenge.
-                  </h4>
-                  <p className="text-slate-600 text-sm leading-relaxed font-medium italic">
-                    "{selectedProgram.description}"
-                  </p>
-                </div>
-
-                {selectedProgram.extendedDescription && (
-                  <div className="bg-slate-900 rounded-2xl p-6 text-white border border-slate-800">
-                    <p className="text-sm leading-relaxed font-medium opacity-90">
-                      {selectedProgram.extendedDescription}
-                    </p>
-                  </div>
-                )}
-
-                {selectedProgram.mechanics && (
-                  <div className="bg-fs-cyan/5 rounded-2xl p-6 border border-fs-cyan/20 font-sans italic">
-                    <h4 className="flex items-center gap-2 text-fs-cyan font-black text-[10px] uppercase tracking-widest mb-3">
-                      <Zap className="w-4 h-4 fill-fs-cyan" /> Participation Mechanics.
-                    </h4>
-                    <p className="text-slate-700 text-sm leading-relaxed font-black">
-                      {selectedProgram.mechanics}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="p-6 border-t border-slate-100 shrink-0 bg-slate-50 flex items-center justify-between">
-              <div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Status</span>
-                <span className={cn(
-                  "text-sm font-black italic uppercase",
-                  registeredPrograms.includes(selectedProgram.id || selectedProgram.title) ? "text-green-500" : "text-brand-purple"
-                )}>
-                  {registeredPrograms.includes(selectedProgram.id || selectedProgram.title) ? "Registered" : "Available"}
-                </span>
-              </div>
-              
-              {registeredPrograms.includes(selectedProgram.id || selectedProgram.title) ? (
-                <button 
-                  onClick={(e) => {
-                    handleUnregisterProgram(selectedProgram.id || selectedProgram.title, e);
-                    setSelectedProgram(null);
-                  }}
-                  className="px-6 py-3 bg-red-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-red-500/20"
-                >
-                  Cancel Registration
-                </button>
-              ) : (
-                <button 
-                  onClick={(e) => {
-                    handleRegisterProgram(selectedProgram.id || selectedProgram.title, e);
-                    setSelectedProgram(null);
-                  }}
-                  className="px-6 py-3 bg-brand-purple text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-brand-purple/20"
-                >
-                  Confirm Registration
-                </button>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
 
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-32">
@@ -426,7 +296,136 @@ const GenericDashboard: React.FC = () => {
         onComplete={handlePointsEarned}
         storageKey="generic_user_profile"
       />
-      <DetailModal />
+      <AnimatePresence>
+        {selectedProgram && (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl">
+            <motion.div
+              initial={{ opacity: 0, y: 100 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 100 }}
+              className="w-full max-w-lg bg-white rounded-[2rem] overflow-hidden shadow-2xl relative max-h-[90vh] flex flex-col"
+            >
+              <button
+                onClick={() => setSelectedProgram(null)}
+                className="absolute top-4 right-4 z-10 w-10 h-10 bg-black/20 hover:bg-black/40 backdrop-blur-md rounded-full flex items-center justify-center text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              
+              <div className="h-48 relative shrink-0">
+                <img src={selectedProgram.image} alt={selectedProgram.title} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
+                <div className="absolute bottom-4 left-6 right-6">
+                  <div className="text-[10px] font-black uppercase tracking-widest text-brand-turquoise mb-1 flex items-center gap-2">
+                    <Star className="w-3 h-3 fill-brand-turquoise" />
+                    {selectedProgram.category} 
+                  </div>
+                  <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">
+                    {selectedProgram.title}
+                  </h3>
+                </div>
+              </div>
+
+              <div className="p-8 overflow-y-auto">
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <Calendar className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Date</span>
+                    </div>
+                    <div className="text-sm font-black text-slate-900 truncate">
+                      {selectedProgram.day || 'May 9, 2026'}
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Time</span>
+                    </div>
+                    <div className="text-sm font-black text-slate-900 truncate">
+                      {selectedProgram.time || 'All Day'}
+                    </div>
+                  </div>
+                  <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 col-span-2">
+                    <div className="flex items-center gap-2 text-slate-400 mb-1">
+                      <MapPin className="w-3.5 h-3.5" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider">Location</span>
+                    </div>
+                    <div className="text-sm font-black text-slate-900">
+                      {selectedProgram.location || 'BGC Amphitheater'}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-6 mb-8">
+                  <div>
+                    <h4 className="flex items-center gap-2 text-fs-orange font-black text-[10px] uppercase tracking-widest mb-3">
+                      <Zap className="w-4 h-4 fill-fs-orange" /> 
+                      {selectedProgram.id === 'pb-viking' || selectedProgram.id === 'viking-games-sat' ? 'Win Prizes up to P40K' : 'About the Challenge.'}
+                    </h4>
+                    <p className="text-slate-600 text-sm leading-relaxed font-medium italic">
+                      "{selectedProgram.description}"
+                    </p>
+                  </div>
+
+                  {selectedProgram.extendedDescription && (
+                    <div className="bg-slate-900 rounded-2xl p-6 text-white border border-slate-800">
+                      <p className="text-sm leading-relaxed font-medium opacity-90">
+                        {selectedProgram.extendedDescription}
+                      </p>
+                    </div>
+                  )}
+
+                  {selectedProgram.mechanics && (
+                    <div className="bg-fs-cyan/5 rounded-2xl p-6 border border-fs-cyan/20 font-sans italic">
+                      <h4 className="flex items-center gap-2 text-fs-cyan font-black text-[10px] uppercase tracking-widest mb-3">
+                        <Zap className="w-4 h-4 fill-fs-cyan" /> Participation Mechanics.
+                      </h4>
+                      <p className="text-slate-700 text-sm leading-relaxed font-black">
+                        {selectedProgram.mechanics}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6 border-t border-slate-100 shrink-0 bg-slate-50 flex items-center justify-between">
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-1">Status</span>
+                  <span className={cn(
+                    "text-sm font-black italic uppercase",
+                    registeredPrograms.includes(selectedProgram.id || selectedProgram.title) ? "text-green-500" : "text-brand-purple"
+                  )}>
+                    {registeredPrograms.includes(selectedProgram.id || selectedProgram.title) ? "Registered" : "Available"}
+                  </span>
+                </div>
+                
+                {registeredPrograms.includes(selectedProgram.id || selectedProgram.title) ? (
+                  <button 
+                    onClick={(e) => {
+                      handleUnregisterProgram(selectedProgram.id || selectedProgram.title, e);
+                      setSelectedProgram(null);
+                    }}
+                    className="px-6 py-3 bg-red-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-red-500/20"
+                  >
+                    Cancel Registration
+                  </button>
+                ) : (
+                  <button 
+                    onClick={(e) => {
+                      handleRegisterProgram(selectedProgram.id || selectedProgram.title, e);
+                      setSelectedProgram(null);
+                    }}
+                    className="px-6 py-3 bg-brand-purple text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-brand-purple/20"
+                  >
+                    Confirm Registration
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

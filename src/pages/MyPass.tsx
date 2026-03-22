@@ -341,158 +341,6 @@ const MyPass: React.FC = () => {
 
   const zones = ['THE ARENA', 'PLAY', 'HEAL', 'EAT', 'GLOW'] as const;
 
-  const DetailModal = () => (
-    <AnimatePresence>
-      {selectedItem && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl">
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.9, y: 100 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.9, y: 100 }}
-            className="w-full max-w-lg max-h-[90vh] scrollbar-hide bg-slate-800 border border-white/10 rounded-[2.5rem] shadow-2xl relative overflow-y-auto flex flex-col"
-          >
-            {/* Sticky Header */}
-            <div className="sticky top-0 z-50 w-full flex justify-between px-6 pt-6 pb-2 -mb-[80px] pointer-events-none">
-              <button 
-                onClick={() => setSelectedItem(null)}
-                className="px-4 py-2 rounded-full bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors gap-2 text-xs font-bold pointer-events-auto shadow-xl"
-              >
-                <ArrowRight className="w-4 h-4 rotate-180" /> <span className="hidden sm:inline">Go Back</span>
-              </button>
-              <button 
-                onClick={() => setSelectedItem(null)}
-                className="w-10 h-10 rounded-full bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors pointer-events-auto shadow-xl"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <div className="relative h-72 shrink-0">
-               <img 
-                 src={'logo' in selectedItem ? resolveDriveImageUrl(selectedItem.logo) : (selectedItem as Activity).image} 
-                 className="w-full h-full object-cover" 
-                 alt={'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title} 
-               />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-transparent to-transparent" />
-            </div>
-
-            <div className="p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <span className="px-3 py-1 rounded-full bg-fs-cyan/20 text-fs-cyan text-[10px] font-black uppercase tracking-widest leading-none">
-                  {selectedItem.zone || 'FITSTREET'}
-                </span>
-                <span className="px-3 py-1 rounded-full bg-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">
-                  {selectedItem.category}
-                </span>
-              </div>
-
-              <div className="flex flex-col gap-2 mb-8 p-6 rounded-2xl bg-white/5 border border-white/5">
-                <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                  <Calendar className="w-4 h-4 text-fs-cyan" /> {(selectedItem as any).day || 'Fitstreet 2026'}
-                </div>
-                <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                  <Clock className="w-4 h-4 text-fs-pink" /> {(selectedItem as any).time || ('duration' in selectedItem ? selectedItem.duration : 'All Day')}
-                </div>
-                <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                  <MapPin className="w-4 h-4 text-fs-orange" /> {(selectedItem as any).location || ('booth' in selectedItem ? selectedItem.booth : 'BGC Amphitheater')}
-                </div>
-              </div>
-
-              <h3 className="text-3xl font-black italic mb-8 tracking-tight uppercase leading-tight text-white">
-                {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
-              </h3>
-
-              <div className="mb-8">
-                <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter mb-4 flex items-center gap-3">
-                  <span className="w-1.5 h-6 bg-fs-cyan rounded-full" />
-                  About {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
-                </h4>
-                <div className="space-y-6">
-                  <p className="text-slate-400 text-sm leading-relaxed italic">
-                    "{(selectedItem as any).description}"
-                  </p>
-                  
-                  {(selectedItem as any).extendedDescription && (
-                    <div className={`text-slate-200 text-sm leading-relaxed font-medium bg-white/5 p-6 rounded-2xl border border-white/5 ${!isExpanded ? 'line-clamp-4' : ''}`}>
-                      {(selectedItem as any).extendedDescription}
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {(selectedItem as any).mechanics && (
-                <div className="bg-fs-cyan/5 rounded-[2rem] p-8 mb-8 border border-fs-cyan/20">
-                  <h4 className="text-fs-cyan font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <Zap className="w-4 h-4 fill-fs-cyan" /> Challenge Mechanics
-                  </h4>
-                  <p className={`text-white text-sm font-medium leading-relaxed italic ${!isExpanded ? 'line-clamp-3' : ''}`}>
-                    {(selectedItem as any).mechanics}
-                  </p>
-                </div>
-              )}
-
-              {((selectedItem.description?.length || 0) > 50 || (selectedItem.mechanics?.length || 0) > 50) && (
-                <button 
-                  onClick={() => setIsExpanded(!isExpanded)}
-                  className="w-full py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors text-xs mb-8 flex items-center justify-center gap-2"
-                >
-                  {isExpanded ? 'Show Less' : 'Read More Details'}
-                </button>
-              )}
-
-              {(selectedItem.id === 'pb-gballers' || selectedItem.id === 'pb-viking' || selectedItem.id === 'gballers-free' || selectedItem.id === 'viking-games-sat') && (
-                <div className="bg-fs-orange/10 rounded-2xl p-6 mb-8 border border-fs-orange/20">
-                  <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-                    <Zap className="w-4 h-4" /> Participation Details
-                  </h3>
-                  <div className="space-y-2">
-                    <p className="text-white text-sm font-bold italic">Cost: P10,000 for a team of 4</p>
-                    <p className="text-slate-400 text-xs font-medium leading-relaxed">Exclusive for non-corporates. Standard registration rates apply for individuals.</p>
-                  </div>
-                </div>
-              )}
-
-              {'logo' in selectedItem ? (
-                <button 
-                  onClick={() => {
-                    navigate('/scanner');
-                  }}
-                  className="w-full py-5 bg-fs-orange text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-fs-orange/20 active:scale-95 transition-all"
-                >
-                  <QrCode className="w-5 h-5" /> Scan Booth QR
-                </button>
-              ) : (
-                <>
-                  {!registeredActivityIds.includes(selectedItem.id) ? (
-                    <button 
-                      onClick={(e) => {
-                        handleRegisterActivity(selectedItem.id, e);
-                        setSelectedItem(null);
-                      }}
-                      className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-fs-cyan text-slate-900 shadow-lg shadow-fs-cyan/20 active:scale-95 transition-all"
-                    >
-                      Register to Activate
-                    </button>
-                  ) : (
-                    <button 
-                      onClick={(e) => {
-                        handleUnregisterActivity(selectedItem.id, e);
-                        setSelectedItem(null);
-                      }}
-                      className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 shadow-lg active:scale-95"
-                    >
-                      <X className="w-5 h-5" /> Cancel Registration
-                    </button>
-                  )}
-                </>
-              )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
-  );
-
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-fs-cyan/30 pb-32 relative">
 
@@ -763,7 +611,161 @@ const MyPass: React.FC = () => {
       )}
 
       {/* Detail Sliding Modal */}
-      <DetailModal />
+      <AnimatePresence>
+        {selectedItem && (
+          <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xl">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 100 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 100 }}
+              className="w-full max-w-lg max-h-[90vh] scrollbar-hide bg-slate-800 border border-white/10 rounded-[2.5rem] shadow-2xl relative overflow-y-auto flex flex-col"
+            >
+              {/* Sticky Header */}
+              <div className="sticky top-0 z-50 w-full flex justify-between px-6 pt-6 pb-2 -mb-[80px] pointer-events-none">
+                <button 
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setIsExpanded(false);
+                  }}
+                  className="px-4 py-2 rounded-full bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors gap-2 text-xs font-bold pointer-events-auto shadow-xl"
+                >
+                  <ArrowRight className="w-4 h-4 rotate-180" /> <span className="hidden sm:inline">Go Back</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setSelectedItem(null);
+                    setIsExpanded(false);
+                  }}
+                  className="w-10 h-10 rounded-full bg-slate-900/80 backdrop-blur-md flex items-center justify-center text-white hover:bg-black transition-colors pointer-events-auto shadow-xl"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="relative h-72 shrink-0">
+                 <img 
+                   src={'logo' in selectedItem ? resolveDriveImageUrl((selectedItem as any).logo) : (selectedItem as Activity).image} 
+                   className="w-full h-full object-cover" 
+                   alt={'name' in selectedItem ? (selectedItem as any).name : (selectedItem as Activity).title} 
+                 />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-transparent to-transparent" />
+              </div>
+
+              <div className="p-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="px-3 py-1 rounded-full bg-fs-cyan/20 text-fs-cyan text-[10px] font-black uppercase tracking-widest leading-none">
+                    {selectedItem.zone || 'FITSTREET'}
+                  </span>
+                  <span className="px-3 py-1 rounded-full bg-white/5 text-slate-400 text-[10px] font-black uppercase tracking-widest leading-none">
+                    {selectedItem.category}
+                  </span>
+                </div>
+
+                <div className="flex flex-col gap-2 mb-8 p-6 rounded-2xl bg-white/5 border border-white/5">
+                  <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                    <Calendar className="w-4 h-4 text-fs-cyan" /> {(selectedItem as any).day || 'Fitstreet 2026'}
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                    <Clock className="w-4 h-4 text-fs-pink" /> {(selectedItem as any).time || ('duration' in selectedItem ? (selectedItem as any).duration : 'All Day')}
+                  </div>
+                  <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                    <MapPin className="w-4 h-4 text-fs-orange" /> {(selectedItem as any).location || ('booth' in selectedItem ? (selectedItem as any).booth : 'BGC Amphitheater')}
+                  </div>
+                </div>
+
+                <h3 className="text-3xl font-black italic mb-8 tracking-tight uppercase leading-tight text-white">
+                  {'name' in selectedItem ? (selectedItem as any).name : (selectedItem as Activity).title}
+                </h3>
+
+                <div className="mb-8">
+                  <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter mb-4 flex items-center gap-3">
+                    <span className="w-1.5 h-6 bg-fs-cyan rounded-full" />
+                    {selectedItem.id === 'pb-viking' || selectedItem.id === 'viking-games-sat' ? 'Win Prizes up to P40K' : ('name' in selectedItem ? 'About ' + (selectedItem as any).name : 'About ' + (selectedItem as Activity).title)}
+                  </h4>
+                  <div className="space-y-6">
+                    <p className="text-slate-400 text-sm leading-relaxed italic">
+                      "{(selectedItem as any).description}"
+                    </p>
+                    
+                    {(selectedItem as any).extendedDescription && (
+                      <div className={`text-slate-200 text-sm leading-relaxed font-medium bg-white/5 p-6 rounded-2xl border border-white/5 ${!isExpanded ? 'line-clamp-4 overflow-hidden' : ''}`}>
+                        {(selectedItem as any).extendedDescription}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {(selectedItem as any).mechanics && (
+                  <div className="bg-fs-cyan/5 rounded-[2rem] p-8 mb-8 border border-fs-cyan/20">
+                    <h4 className="text-fs-cyan font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <Zap className="w-4 h-4 fill-fs-cyan" /> Challenge Mechanics
+                    </h4>
+                    <p className={`text-white text-sm font-medium leading-relaxed italic ${!isExpanded ? 'line-clamp-3 overflow-hidden' : ''}`}>
+                      {(selectedItem as any).mechanics}
+                    </p>
+                  </div>
+                )}
+
+                {((selectedItem as any).extendedDescription || (selectedItem as any).mechanics) && (
+                  <button 
+                    onClick={() => setIsExpanded(!isExpanded)}
+                    className="w-full py-3 bg-white/5 border border-white/10 text-white rounded-xl font-bold uppercase tracking-widest hover:bg-white/10 transition-colors text-xs mb-8 flex items-center justify-center gap-2"
+                  >
+                    {isExpanded ? 'Show Less' : 'Read More Details'}
+                  </button>
+                )}
+
+                {(selectedItem.id === 'pb-gballers' || selectedItem.id === 'pb-viking' || selectedItem.id === 'gballers-free' || selectedItem.id === 'viking-games-sat') && (
+                  <div className="bg-fs-orange/10 rounded-2xl p-6 mb-8 border border-fs-orange/20">
+                    <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
+                      <Zap className="w-4 h-4" /> Participation Details
+                    </h3>
+                    <div className="space-y-2">
+                      <p className="text-white text-sm font-bold italic">Cost: P10,000 for a team of 4</p>
+                      <p className="text-slate-400 text-xs font-medium leading-relaxed">Exclusive for non-corporates. Standard registration rates apply for individuals.</p>
+                    </div>
+                  </div>
+                )}
+
+                {'logo' in selectedItem ? (
+                  <button 
+                    onClick={() => {
+                      navigate('/scanner');
+                    }}
+                    className="w-full py-5 bg-fs-orange text-white rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 shadow-lg shadow-fs-orange/20 active:scale-95 transition-all"
+                  >
+                    <QrCode className="w-5 h-5" /> Scan Booth QR
+                  </button>
+                ) : (
+                  <>
+                    {!registeredActivityIds.includes(selectedItem.id) ? (
+                      <button 
+                        onClick={(e) => {
+                          handleRegisterActivity(selectedItem.id, e);
+                          setSelectedItem(null);
+                        }}
+                        className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-fs-cyan text-slate-900 shadow-lg shadow-fs-cyan/20 active:scale-95 transition-all"
+                      >
+                        Register to Activate
+                      </button>
+                    ) : (
+                      <button 
+                        onClick={(e) => {
+                          handleUnregisterActivity(selectedItem.id, e);
+                          setSelectedItem(null);
+                        }}
+                        className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 shadow-lg active:scale-95"
+                      >
+                        <X className="w-5 h-5" /> Cancel Registration
+                      </button>
+                    )}
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* Success Modal */}
       <AnimatePresence>

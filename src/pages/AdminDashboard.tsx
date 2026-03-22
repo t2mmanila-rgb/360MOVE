@@ -226,7 +226,9 @@ const AdminDashboard: React.FC = () => {
               time: row.time,
               isPaid: row.is_paid,
               location: row.location,
-              description: row.description
+              description: row.description,
+              extendedDescription: row.extended_description,
+              mechanics: row.mechanics
             };
           });
           setOverrides(ovs);

@@ -31,6 +31,7 @@ export interface PassportBrand {
   isSignupRequired?: boolean;
   zone: 'EAT' | 'PLAY' | 'HEAL' | 'GLOW' | 'THE ARENA';
   mechanics: string;
+  extendedDescription?: string;
   points: number;
 }
 
