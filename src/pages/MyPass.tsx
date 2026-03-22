@@ -299,10 +299,8 @@ const MyPass: React.FC = () => {
 
   const displayName = userProfile?.name || "Member";
   const firstName = displayName ? displayName.split(' ')[0] : "Member";
-  const userInitial = displayName ? displayName.charAt(0) : "M";
+  const userInitial = userProfile?.name?.charAt(0) || "?";
   const passId = userProfile?.passId || `360-FS26-${Math.floor(1000 + Math.random() * 9000)}`;
-
-  const userInterests = userProfile?.categories || userProfile?.interests || [];
 
   const handleShareFitstreet = async () => {
     const shareData = {
@@ -341,15 +339,31 @@ const MyPass: React.FC = () => {
 
   const recommendedActivities = React.useMemo(() => {
     const all = [...activities];
-    if (!userInterests.length) return all.slice(0, 3);
+    const goal = userProfile?.training_goal?.toLowerCase() || '';
+    const interests = (userProfile?.interests || []).map((i: string) => i.toLowerCase());
+
+    // Map common goals to tags
+    const targetTags: string[] = [...interests];
+    if (goal.includes('high-octane')) targetTags.push('cardio', 'high intensity', 'physical');
+    if (goal.includes('mind-body')) targetTags.push('mindfulness', 'wellness', 'recovery', 'heal');
+    if (goal.includes('functional')) targetTags.push('movement', 'physical');
+    if (goal.includes('body composition')) targetTags.push('physical', 'nutrition');
+    if (goal.includes('longevity')) targetTags.push('wellness', 'heal', 'recovery');
+
+    if (targetTags.length === 0) return all.slice(0, 3);
     
-    return all.filter(act => 
-      userInterests.some((interest: string) => 
-        act.category?.toLowerCase().includes(interest.split(' ')[0].toLowerCase()) ||
-        interest.toLowerCase().includes(act.category?.toLowerCase() || '')
-      )
-    ).slice(0, 3);
-  }, [userInterests, activities]);
+    return all.sort((a, b) => {
+      const aMatch = targetTags.some(tag => 
+        a.category?.toLowerCase().includes(tag) || tag.includes(a.category?.toLowerCase() || '')
+      );
+      const bMatch = targetTags.some(tag => 
+        b.category?.toLowerCase().includes(tag) || tag.includes(b.category?.toLowerCase() || '')
+      );
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    }).slice(0, 3);
+  }, [userProfile, activities]);
 
   const zones = ['THE ARENA', 'PLAY', 'HEAL', 'EAT', 'GLOW'] as const;
 
@@ -531,9 +545,9 @@ const MyPass: React.FC = () => {
               <ArrowRight className="w-5 h-5 rotate-180" />
             </button>
             <div>
-              <h1 className="text-3xl font-black italic tracking-tighter uppercase italic">
-                Welcome, {firstName}!
-              </h1>
+                <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-none mb-2">
+                  Welcome, {firstName}!
+                </h1>
               <p className="text-[10px] uppercase font-bold text-slate-500 tracking-widest mt-1">ID: {passId}</p>
             </div>
           </div>

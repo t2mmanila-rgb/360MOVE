@@ -147,8 +147,35 @@ const GenericDashboard: React.FC = () => {
     }
   };
 
-  const displayName = genericUser?.name || "Member";
-  const firstName = displayName.split(' ')[0];
+  const recommendedPrograms = React.useMemo(() => {
+    const all = [...B2CConfig];
+    const goal = genericUser?.training_goal?.toLowerCase() || '';
+    const interests = (genericUser?.interests || []).map((i: string) => i.toLowerCase());
+
+    // Map common goals to tags
+    const targetTags: string[] = [...interests];
+    if (goal.includes('high-octane')) targetTags.push('cardio', 'high intensity', 'physical');
+    if (goal.includes('mind-body')) targetTags.push('mindfulness', 'wellness', 'recovery', 'heal');
+    if (goal.includes('functional')) targetTags.push('movement', 'physical');
+    if (goal.includes('body composition')) targetTags.push('physical', 'nutrition');
+    if (goal.includes('longevity')) targetTags.push('wellness', 'heal', 'recovery');
+
+    if (targetTags.length === 0) return all.slice(0, 3);
+    
+    return all.sort((a, b) => {
+      const aMatch = targetTags.some(tag => 
+        a.category?.toLowerCase().includes(tag) || tag.includes(a.category?.toLowerCase() || '')
+      );
+      const bMatch = targetTags.some(tag => 
+        b.category?.toLowerCase().includes(tag) || tag.includes(b.category?.toLowerCase() || '')
+      );
+      if (aMatch && !bMatch) return -1;
+      if (!aMatch && bMatch) return 1;
+      return 0;
+    }).slice(0, 3);
+  }, [genericUser, B2CConfig]);
+
+  const firstName = (genericUser?.name?.split(' ')[0] || "Member").toUpperCase();
   const totalPoints = calculatePoints();
 
   const DetailModal = () => (
@@ -263,7 +290,7 @@ const GenericDashboard: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-3xl md:text-5xl font-black italic tracking-tighter uppercase leading-none mb-2">
-                  Sup, {firstName}.
+                  Welcome, {firstName}!
                 </h1>
                 <p className="text-slate-400 font-medium tracking-wide">
                   Welcome to your 360MOVE Dashboard.
@@ -329,8 +356,8 @@ const GenericDashboard: React.FC = () => {
             </span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {B2CConfig.map((program) => {
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {recommendedPrograms.map((program) => {
               const progId = program.id || program.title;
               const isRegistered = registeredPrograms.includes(progId);
               return (

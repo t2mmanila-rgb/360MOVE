@@ -24,11 +24,24 @@ const Schedule: React.FC = () => {
     } catch { return []; }
   });
 
-  const handleRegisterActivity = (id: string, e: React.MouseEvent) => {
+  const handleRegisterActivity = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const newRegistered = [...registeredActivityIds, id];
     setRegisteredActivityIds(newRegistered);
     localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
+
+    // Sync to Supabase
+    const stored = localStorage.getItem('user_profile');
+    const userProfile = stored ? JSON.parse(stored) : null;
+    if (userProfile?.email) {
+      try {
+        const { syncUserActivity } = await import('../lib/supabase');
+        const activity = schedule.find(a => a.id === id);
+        await syncUserActivity(userProfile.email, id, activity?.points || 1);
+      } catch (err) {
+        console.warn('Supabase registration sync failed:', err);
+      }
+    }
   };
 
   const handleUnregisterActivity = (id: string, e: React.MouseEvent) => {

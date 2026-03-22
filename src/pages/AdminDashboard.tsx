@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, BarChart3, Edit3, Save, Trash2, 
+  Users, BarChart3, Edit3, Save, Trash2, Clock, MapPin, ChevronRight,
   Search, CheckSquare, Square,
   Activity, Target, Zap, Sparkles, Lock, Settings, PieChart, Heart, QrCode,
   Utensils
@@ -502,28 +502,58 @@ const AdminDashboard: React.FC = () => {
                     <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Activity Signups.</h3>
                     <div className="px-4 py-1 bg-fs-cyan/10 rounded-full text-[10px] font-black text-fs-cyan uppercase tracking-widest">Live Multi-User Sync</div>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-h-[800px] overflow-y-auto pr-4 scrollbar-thin">
-                    {[...schedule, ...programs].map((act) => {
+                               <div className="flex flex-col gap-4 max-h-[800px] overflow-y-auto pr-4 scrollbar-thin">
+                    {[...schedule, ...programs].sort((a, b) => (stats.activityCounts?.[b.id] || 0) - (stats.activityCounts?.[a.id] || 0)).map((act) => {
                       const count = stats.activityCounts?.[act.id] || 0;
                       return (
-                        <div key={act.id} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 hover:border-fs-cyan/30 transition-all flex items-center justify-between group">
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-200 shrink-0">
+                        <div key={act.id} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 hover:border-fs-cyan/30 transition-all flex items-center justify-between group gap-8">
+                          <div className="flex items-center gap-6 flex-1 min-w-0">
+                            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-200 shrink-0 shadow-lg group-hover:scale-105 transition-transform">
                               <img src={act.image} alt="" className="w-full h-full object-cover" />
                             </div>
-                            <div>
-                              <div className="text-sm font-black text-slate-900 uppercase italic truncate max-w-[120px]">{act.title}</div>
-                              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{act.category}</div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-3 mb-1">
+                                <span className="bg-slate-900 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">
+                                  {act.zone || 'FITSTREET'}
+                                </span>
+                                <div className="text-sm sm:text-lg font-black text-slate-900 uppercase italic truncate">{act.title}</div>
+                              </div>
+                              <div className="flex items-center gap-4">
+                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                  <div className="w-1.5 h-1.5 rounded-full bg-fs-cyan" />
+                                  {act.category}
+                                </div>
+                                {act.time && (
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                                    <Clock className="w-3 h-3" />
+                                    {act.time}
+                                  </div>
+                                )}
+                                {act.location && (
+                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 hidden sm:flex">
+                                    <MapPin className="w-3 h-3" />
+                                    {act.location}
+                                  </div>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex flex-col items-end">
-                            <span className={cn(
-                              "text-2xl font-black italic",
-                              count > 0 ? "text-fs-cyan" : "text-slate-300"
-                            )}>
-                              {count}
-                            </span>
-                            <span className="text-[8px] font-black uppercase tracking-tighter text-slate-400 leading-none">Registered</span>
+                          <div className="flex items-center gap-8 shrink-0">
+                            <div className="flex flex-col items-end">
+                              <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Registrations</div>
+                              <span className={cn(
+                                "text-2xl font-black italic",
+                                count > 0 ? "text-fs-cyan font-black" : "text-slate-200"
+                              )}>
+                                {count.toString().padStart(2, '0')}
+                              </span>
+                            </div>
+                            <button 
+                              onClick={() => setEditingActivity(act)}
+                              className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm"
+                            >
+                              <ChevronRight className="w-5 h-5" />
+                            </button>
                           </div>
                         </div>
                       );
