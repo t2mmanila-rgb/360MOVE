@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, BarChart3, Edit3, Save, Trash2, Clock, MapPin, ChevronRight,
-  Search, CheckSquare, Square,
+  Users, BarChart3, Save, Trash2, Clock, MapPin, ChevronRight,
+  Search, CheckSquare, Square, X,
   Activity, Target, Zap, Sparkles, Lock, Settings, PieChart, Heart, QrCode,
   Utensils
 } from 'lucide-react';
@@ -645,83 +645,114 @@ const AdminDashboard: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="grid grid-cols-1 lg:grid-cols-3 gap-8"
+              className="space-y-12"
             >
-              <div className="lg:col-span-1 bg-white rounded-[4rem] p-10 border border-slate-100 shadow-xl max-h-[70vh] flex flex-col overflow-hidden">
-                <div className="flex items-center justify-between mb-10 shrink-0">
-                  <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">Activity List.</h3>
-                  <div className="w-8 h-8 rounded-full bg-slate-900 text-white flex items-center justify-center text-xs font-black">{schedule.length + programs.length}</div>
+              <div className="bg-white rounded-[4rem] p-12 border border-slate-100 shadow-xl flex flex-col overflow-hidden">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
+                  <div className="flex items-center gap-4">
+                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">Activity Oversight.</h3>
+                    <div className="px-4 py-1.5 rounded-full bg-slate-900 text-white text-[10px] font-black uppercase tracking-widest">{schedule.length + programs.length} Total</div>
+                  </div>
+                  
+                  <div className="relative w-full md:w-96">
+                    <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input type="text" placeholder="Search entries..." className="w-full bg-slate-50 rounded-2xl pl-14 pr-6 py-4 text-xs font-bold outline-none border border-transparent focus:border-fs-cyan/30 transition-all shadow-inner" />
+                  </div>
                 </div>
                 
-                <div className="relative mb-6 shrink-0">
-                  <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <input type="text" placeholder="Search entries..." className="w-full bg-slate-50 rounded-2xl pl-14 pr-6 py-4 text-xs font-bold outline-none border border-transparent focus:border-fs-cyan/30 transition-all shadow-inner" />
-                </div>
-
-                <div className="overflow-y-auto space-y-4 pr-2">
-                  <div className="text-[9px] font-black uppercase tracking-[0.2em] text-fs-orange mb-2 ml-4">Fitstreet Schedule</div>
-                  {schedule.map(act => (
-                    <button 
-                      key={act.id} 
-                      onClick={() => setEditingActivity(act)}
-                      className={cn(
-                        "w-full flex items-center gap-4 p-4 rounded-3xl transition-all border text-left",
-                        editingActivity?.id === act.id ? "bg-fs-cyan/5 border-fs-cyan/20 shadow-lg shadow-fs-cyan/5" : "bg-slate-50/50 border-slate-100 hover:border-slate-300"
-                      )}
-                    >
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-200 shrink-0">
-                        <img src={act.image} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="truncate">
-                        <div className="flex items-center gap-2">
-                          <div className="text-xs font-black text-slate-900 truncate leading-tight uppercase italic">{act.title}</div>
-                          {stats.activityCounts?.[act.id] > 0 && (
-                            <span className="bg-slate-900 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0">
-                              {stats.activityCounts[act.id]}
-                            </span>
+                <div className="space-y-12">
+                  <div>
+                    <div className="flex items-center gap-3 mb-6 ml-4">
+                      <div className="w-2 h-2 rounded-full bg-fs-orange" />
+                      <div className="text-[10px] font-black uppercase tracking-[0.3em] text-fs-orange">Fitstreet Schedule</div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {schedule.map(act => (
+                        <button 
+                          key={act.id} 
+                          onClick={() => {
+                            setEditingActivity(act);
+                            // Scroll to editor
+                            setTimeout(() => {
+                              document.getElementById('activity-editor')?.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                          }}
+                          className={cn(
+                            "group flex flex-col p-4 rounded-3xl transition-all border text-left h-full",
+                            editingActivity?.id === act.id ? "bg-fs-cyan/5 border-fs-cyan/30 shadow-xl shadow-fs-cyan/5 ring-2 ring-fs-cyan/20" : "bg-white border-slate-100 hover:border-slate-300 hover:shadow-lg"
                           )}
-                        </div>
-                        <div className="text-[9px] font-bold text-slate-400 group-hover:text-slate-500">{act.category}</div>
-                      </div>
-                    </button>
-                  ))}
+                        >
+                          <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 mb-4 relative">
+                            <img src={act.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            {stats.activityCounts?.[act.id] > 0 && (
+                              <div className="absolute top-3 right-3 bg-slate-900 text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">
+                                <Users className="w-3 h-3 text-fs-cyan" />
+                                {stats.activityCounts[act.id]}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{act.category}</div>
+                            <div className="text-sm font-black text-slate-900 leading-tight uppercase italic group-hover:text-fs-cyan transition-colors line-clamp-2">{act.title}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                  <div className="text-[9px] font-black uppercase tracking-[0.2em] text-brand-purple mt-8 mb-2 ml-4">Movement Programs</div>
-                  {programs.map(prog => (
-                    <button 
-                      key={prog.id} 
-                      onClick={() => setEditingActivity(prog)}
-                      className={cn(
-                        "w-full flex items-center gap-4 p-4 rounded-3xl transition-all border text-left",
-                        editingActivity?.id === prog.id ? "bg-brand-purple/5 border-brand-purple/20 shadow-lg shadow-brand-purple/5" : "bg-slate-50/50 border-slate-100 hover:border-slate-300"
-                      )}
-                    >
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-200 shrink-0">
-                        <img src={prog.image} alt="" className="w-full h-full object-cover" />
-                      </div>
-                      <div className="truncate">
-                        <div className="flex items-center gap-2">
-                          <div className="text-xs font-black text-slate-900 truncate leading-tight uppercase italic">{prog.title}</div>
-                          {stats.activityCounts?.[prog.id] > 0 && (
-                            <span className="bg-brand-purple text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0">
-                              {stats.activityCounts[prog.id]}
-                            </span>
+                  <div>
+                    <div className="flex items-center gap-3 mb-6 ml-4">
+                      <div className="w-2 h-2 rounded-full bg-brand-purple" />
+                      <div className="text-[10px] font-black uppercase tracking-[0.3em] text-brand-purple">Movement Programs</div>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {programs.map(prog => (
+                        <button 
+                          key={prog.id} 
+                          onClick={() => {
+                            setEditingActivity(prog);
+                            setTimeout(() => {
+                              document.getElementById('activity-editor')?.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
+                          }}
+                          className={cn(
+                            "group flex flex-col p-4 rounded-3xl transition-all border text-left h-full",
+                            editingActivity?.id === prog.id ? "bg-brand-purple/5 border-brand-purple/30 shadow-xl shadow-brand-purple/5 ring-2 ring-brand-purple/20" : "bg-white border-slate-100 hover:border-slate-300 hover:shadow-lg"
                           )}
-                        </div>
-                        <div className="text-[9px] font-bold text-slate-400 group-hover:text-slate-500">{prog.category}</div>
-                      </div>
-                    </button>
-                  ))}
+                        >
+                          <div className="w-full aspect-video rounded-2xl overflow-hidden bg-slate-100 mb-4 relative">
+                            <img src={prog.image} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                            {stats.activityCounts?.[prog.id] > 0 && (
+                              <div className="absolute top-3 right-3 bg-brand-purple text-white text-[9px] font-black px-2.5 py-1 rounded-full shadow-lg flex items-center gap-1.5">
+                                <Users className="w-3 h-3" />
+                                {stats.activityCounts[prog.id]}
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">{prog.category}</div>
+                            <div className="text-sm font-black text-slate-900 leading-tight uppercase italic group-hover:text-brand-purple transition-colors line-clamp-2">{prog.title}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="lg:col-span-2 space-y-8">
-                {editingActivity ? (
+              {editingActivity && (
+                <div id="activity-editor" className="scroll-mt-32">
                   <motion.div 
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="bg-white rounded-[4rem] p-16 border border-slate-100 shadow-2xl relative"
+                    initial={{ opacity: 0, y: 40 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-white rounded-[4rem] p-16 border-4 border-slate-100 shadow-2xl relative"
                   >
+                    <button 
+                      onClick={() => setEditingActivity(null)}
+                      className="absolute top-12 right-12 w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-all"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
                     <div className="flex items-center justify-between mb-16">
                       <div className="flex items-center gap-6">
                         <div className="w-16 h-16 rounded-3xl bg-slate-100 overflow-hidden">
@@ -916,16 +947,8 @@ const AdminDashboard: React.FC = () => {
                       <button className="pill-button bg-slate-900 text-white px-10">Done Editing</button>
                     </div>
                   </motion.div>
-                ) : (
-                  <div className="h-full bg-white rounded-[4rem] border-2 border-dashed border-slate-200 flex flex-col items-center justify-center p-20 text-center">
-                    <div className="w-24 h-24 bg-slate-50 rounded-full flex items-center justify-center mb-10">
-                      <Edit3 className="w-10 h-10 text-slate-200" />
-                    </div>
-                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-300">No Source Selected.</h3>
-                    <p className="text-slate-400 font-medium max-w-xs mx-auto mt-4">Select an activity or program from the left sidebar to modify its live properties.</p>
-                  </div>
-                )}
-              </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
