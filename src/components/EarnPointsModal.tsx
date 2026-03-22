@@ -39,8 +39,8 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
       ...profile,
       ...formData,
       profileCompleted: true,
-      pointsProfileCompletion: 1,
-      points: (profile.points || 0) + 1 // Add 1 point for profile completion
+      pointsProfileCompletion: 10,
+      points: (profile.points || 0) + 10 // Add 10 points for profile completion
     };
     
     // Sync to Supabase
@@ -82,8 +82,8 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
       
       const updated = {
         ...profile,
-        pointsHRShare: (profile.pointsHRShare || 0) + 1,
-        points: (profile.points || 0) + 1
+        pointsHRShare: (profile.pointsHRShare || 0) + 10,
+        points: (profile.points || 0) + 10
       };
 
       // Sync to Supabase
@@ -125,7 +125,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                   <Dumbbell className="w-8 h-8 text-fs-orange" />
                 </div>
                 <h2 className="text-3xl font-black italic uppercase italic tracking-tighter text-white">Fitness <span className="text-fs-orange">DNA.</span></h2>
-                <p className="text-slate-400 font-medium">Earn 1 point by sharing your athletic profile.</p>
+                <p className="text-slate-400 font-medium">Earn 10 points by sharing your athletic profile.</p>
               </div>
 
               <div className="space-y-6 mb-10">
@@ -201,7 +201,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                   <Utensils className="w-8 h-8 text-fs-cyan" />
                 </div>
                 <h2 className="text-3xl font-black italic uppercase italic tracking-tighter text-white">Fuel & <span className="text-fs-cyan">Lifestyle.</span></h2>
-                <p className="text-slate-400 font-medium">Almost there. Complete your profile for 1 point.</p>
+                <p className="text-slate-400 font-medium">Almost there. Complete your profile for 10 points.</p>
               </div>
 
               <div className="space-y-6 mb-10">
@@ -291,7 +291,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                   <Gift className="w-10 h-10 text-fs-pink" />
                 </div>
                 <h3 className="text-2xl font-black italic uppercase italic tracking-tighter mb-4 text-white">Bonus Goal!</h3>
-                <p className="text-slate-400 mb-8 font-medium">Earn **1 EXTRA POINT** for telling us where you work and sharing Fitstreet with your HR team.</p>
+                <p className="text-slate-400 mb-8 font-medium">Earn **10 EXTRA POINTS** for telling us where you work and sharing Fitstreet with your HR team.</p>
                 <div className="space-y-4">
                   <button 
                     onClick={handleShare}

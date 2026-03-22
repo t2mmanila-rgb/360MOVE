@@ -43,7 +43,8 @@ const Register: React.FC = () => {
     const finalData = {
       ...formData,
       categories: formData.interests, // Map interests to categories for MyPass.tsx compatibility
-      personalized: true // Mark as personalized since we are skipping the onboarding/interest steps for now
+      personalized: true, // Mark as personalized since we are skipping the onboarding/interest steps for now
+      points: 10 // Award 10 points starter bonus
     };
     
     // Clear existing local state to prevent leakage between test users

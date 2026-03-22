@@ -229,39 +229,6 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
                   <option value="Female" className="bg-slate-900">Female</option>
                   <option value="Non-binary" className="bg-slate-900">Non-binary</option>
                 </select>
-                <select 
-                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer"
-                  value={(formData as any).fitnessLevel || ''}
-                  onChange={e => setFormData({...formData, fitnessLevel: e.target.value} as any)}
-                >
-                  <option value="" className="bg-slate-900">Fitness Level</option>
-                  <option value="Beginner" className="bg-slate-900">Beginner</option>
-                  <option value="Intermediate" className="bg-slate-900">Intermediate</option>
-                  <option value="Advanced" className="bg-slate-900">Advanced / Athlete</option>
-                </select>
-                <select 
-                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer"
-                  value={(formData as any).workoutFrequency || ''}
-                  onChange={e => setFormData({...formData, workoutFrequency: e.target.value} as any)}
-                >
-                  <option value="" className="bg-slate-900">Workouts/Week</option>
-                  <option value="0-1" className="bg-slate-900">0-1 times</option>
-                  <option value="2-3" className="bg-slate-900">2-3 times</option>
-                  <option value="4-5" className="bg-slate-900">4-5 times</option>
-                  <option value="Daily" className="bg-slate-900">Daily</option>
-                </select>
-                <select 
-                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer col-span-2"
-                  value={(formData as any).trainingGoal || ''}
-                  onChange={e => setFormData({...formData, trainingGoal: e.target.value} as any)}
-                >
-                  <option value="" className="bg-slate-900">Main Training Goal</option>
-                  <option value="Weight Loss" className="bg-slate-900">Weight Loss & Shred</option>
-                  <option value="Muscle Gain" className="bg-slate-900">Muscle & Strength</option>
-                  <option value="Endurance" className="bg-slate-900">Endurance & Cardio</option>
-                  <option value="Flexibility" className="bg-slate-900">Flexibility & Recovery</option>
-                  <option value="General Health" className="bg-slate-900">General Longevity</option>
-                </select>
               </div>
 
               <button 
