@@ -748,7 +748,10 @@ const MyPass: React.FC = () => {
                         }`} />
                         
                         <div className="absolute inset-0 p-8 pt-24 flex flex-col justify-end items-center text-center gap-6">
-                          <h4 className="text-lg font-black uppercase italic leading-tight tracking-tighter text-white drop-shadow-lg">
+                          <h4 className={cn(
+                            "text-lg font-black uppercase italic leading-tight tracking-tighter drop-shadow-lg",
+                            registeredActivityIds.includes(activity.id) ? "text-fs-cyan" : "text-white"
+                          )}>
                             {activity.title}
                           </h4>
                           
