@@ -31,8 +31,22 @@ const AdminDashboard: React.FC = () => {
 
   const fetchAttendees = async (activityId: string) => {
     setIsAttendeesLoading(true);
+    console.log('[Admin] Fetching attendees for:', activityId);
     try {
-      // Try full select first
+      // 1. Try a super-minimal select first to confirm the activity_id exists
+      const { data: testData, error: testError } = await supabase
+        .from('user_activities')
+        .select('id')
+        .eq('activity_id', activityId);
+
+      if (testError) {
+        alert("⚠️ DB Error: " + testError.message);
+        throw testError;
+      }
+
+      console.log(`[Admin] DB Rows found for ${activityId}:`, testData?.length);
+
+      // 2. Try the full select with profiles
       const { data, error } = await supabase
         .from('user_activities')
         .select(`
@@ -40,7 +54,7 @@ const AdminDashboard: React.FC = () => {
           user_email,
           registered_at,
           is_onsite,
-          profiles (
+          profiles!user_email (
             name,
             age_range,
             gender
@@ -50,7 +64,7 @@ const AdminDashboard: React.FC = () => {
         .order('registered_at', { ascending: false });
 
       if (error) {
-         console.warn('[Admin] Attendee fetch full profile failed, retrying minimal...', error.message);
+         console.warn('[Admin] Profile join failed, showing minimal data...', error.message);
          // Fallback: Just the activity data + email
          const { data: minimalData, error: minimalError } = await supabase
            .from('user_activities')
@@ -63,7 +77,10 @@ const AdminDashboard: React.FC = () => {
            .eq('activity_id', activityId)
            .order('registered_at', { ascending: false });
            
-         if (minimalError) throw minimalError;
+         if (minimalError) {
+           alert("⚠️ Fallback Error: " + minimalError.message);
+           throw minimalError;
+         }
          setAttendees(minimalData || []);
          return;
       }
@@ -73,7 +90,9 @@ const AdminDashboard: React.FC = () => {
       console.error('Error fetching attendees:', err);
       const msg = err instanceof Error ? err.message : String(err);
       if (msg.includes('PGRST204')) {
-        alert("⚠️ DATABASE SCHEMA ERROR: Your Supabase table is missing some columns (like age_range or gender). Please run the SQL migration I provided.");
+        alert("⚠️ SCHEMA ERROR: Please run the SQL migration I provided in Supabase.");
+      } else {
+        alert("⚠️ Fetch Failed: " + msg + " for ID: " + activityId);
       }
     } finally {
       setIsAttendeesLoading(false);
