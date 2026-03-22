@@ -56,7 +56,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
       ...formData, 
       personalized: true,
       points: starterPoints,
-      pointsOnboarding: 10,
+      pointsOnboarding: 0,
       signupDate: formData.signupDate || new Date().toISOString()
     };
     

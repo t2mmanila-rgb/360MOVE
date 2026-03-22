@@ -303,10 +303,22 @@ const MyPass: React.FC = () => {
       setSuccessActivity(activity);
       setShowSuccessModal(true);
       
-      // Sync to Supabase (Record as Check-in/Participated)
+      logRegistrationToSheet('https://script.google.com/macros/s/AKfycby7--LX2UwK649yFZW8rvjnpxnuIoBp_3fN3_nblt03Tm4JWUndvvgb4wZJPnQ38w/exec', {
+        userId: userProfile?.mobile || 'unknown',
+        userName: userProfile?.name || 'Guest',
+        activityId: activity.id,
+        activityTitle: activity.title,
+        type: 'activity',
+        timestamp: new Date().toISOString()
+      });
+
+      // Sync to Supabase with latest calculated points
       try {
         const { syncUserActivity } = await import('../lib/supabase');
-        await syncUserActivity(userProfile.email!, activity.id, activity.points, userProfile, 'checked-in', true);
+        // Pre-calculate points to send to Supabase
+        const currentTotal = calculatePoints();
+        const updatedWithPoints = { ...userProfile, points: currentTotal };
+        await syncUserActivity(userProfile.email!, activity.id, activity.points, updatedWithPoints, 'checked-in', true);
       } catch (err) {
         console.warn('Supabase activity scan sync failed:', err);
       }
@@ -326,14 +338,16 @@ const MyPass: React.FC = () => {
     }, 0);
 
     const scannedPoints = scannedActivityIds.reduce((total, id) => {
-      const activity = schedule.find(a => a.id === id);
+      const activity = allActivities.find(a => a.id === id);
       return total + (activity?.points || 1);
     }, 0);
 
+    const onboardingPoints = userProfile?.pointsOnboarding || 0;
     const profilePoints = (userProfile?.profileCompleted ? 10 : 0);
-    const sharePoints = userProfile?.pointsHRShare || 0;
+    const hrSharePoints = userProfile?.pointsHRShare || 0;
+    const friendSharePoints = userProfile?.pointsFriendShare || 0;
     
-    return 1 + passportPoints + scannedPoints + profilePoints + sharePoints;
+    return 1 + passportPoints + scannedPoints + onboardingPoints + profilePoints + hrSharePoints + friendSharePoints;
   };
 
   const handlePointsEarned = async (updatedProfile: any) => {
@@ -369,19 +383,26 @@ const MyPass: React.FC = () => {
         window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
       }
 
-      // Award 10 points if not already shared
-      if (!userProfile?.pointsShared) {
+      // Award 10 points for Sharing (Friends)
+      if (!userProfile?.pointsFriendShare) {
         const updatedProfile = {
           ...userProfile,
-          pointsHRShare: 10,
+          pointsFriendShare: 10,
           pointsShared: true
         };
+        
+        // We set the state first so calculatePoints() picks up the new value
         setUserProfile(updatedProfile);
         localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
         
-        const { syncProfile } = await import('../lib/supabase');
-        await syncProfile(updatedProfile, 'fitstreet');
-        alert('🎉 10 Bonus Points awarded for sharing!');
+        // Now sync with Supabase using the derived total
+        setTimeout(async () => {
+          const { syncProfile } = await import('../lib/supabase');
+          const totalAfterShare = calculatePoints(); // This will now include the 10 points
+          await syncProfile({ ...updatedProfile, points: totalAfterShare }, 'fitstreet');
+        }, 100);
+
+        alert('🎉 10 Bonus Points awarded for sharing with friends!');
       } else {
         alert('You already earned points for sharing, but thanks for spreading the word!');
       }
@@ -520,7 +541,7 @@ const MyPass: React.FC = () => {
               </div>
               <div className="text-left">
                 <div className="text-[10px] font-black uppercase tracking-widest text-fs-cyan mb-1">Spread the Word</div>
-                <div className="text-sm font-bold text-white">Share FITSTREET and earn 10 extra points!</div>
+                <div className="text-sm font-bold text-white">Share with Friends and earn 10 extra points!</div>
               </div>
             </div>
             <ArrowRight className="w-5 h-5 text-fs-cyan group-hover:translate-x-2 transition-transform" />

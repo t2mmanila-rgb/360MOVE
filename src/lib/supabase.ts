@@ -28,9 +28,12 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
       profile_type: type,
       points: profile.points,
       profile_completed: !!profile.profileCompleted,
-      points_profile_completion: profile.pointsProfileCompletion || 0,
-      points_hr_share: profile.pointsHRShare || 0,
-      points_shared: !!profile.pointsShared,
+      points_profile_completion: profile.pointsProfileCompletion || profile.points_profile_completion || 0,
+      points_hr_share: profile.pointsHRShare || profile.points_hr_share || 0,
+      points_friend_share: profile.pointsFriendShare || profile.points_friend_share || 0,
+      points_onboarding: profile.pointsOnboarding || profile.points_onboarding || 0,
+      points_scans: profile.pointsScans || profile.points_scans || 0,
+      points_shared: !!(profile.pointsShared || profile.points_shared),
       occupation: profile.occupation,
       updated_at: new Date().toISOString()
     };
@@ -49,64 +52,49 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
       .single();
 
     if (error) {
-      // Robustness: If schema is out of sync (PGRST204), try a minimal upsert
-      if (error.code === 'PGRST204' || error.message.includes('column')) {
-        console.warn('[Supabase] Schema mismatch, retrying minimal sync...', error.message);
-        const minimalData = { ...upsertData };
-        delete minimalData.occupation;
-        delete minimalData.points_profile_completion;
-        
-        const { data: retryData, error: retryError } = await supabase
-          .from('profiles')
-          .upsert(minimalData, { onConflict: 'email' })
-          .select()
-          .single();
-          
-        if (retryError) throw retryError;
-        return retryData;
-      }
       throw error;
-    }
-    
-    // Success alert for debugging purposes on mobile - will be removed once confirmed working
-    if (typeof window !== 'undefined' && profile.name === 'test1') {
-      console.log('✅ SYNC SUCCESS for', profile.email);
     }
     
     return data;
   } catch (err) {
-    const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
-    console.error('Supabase Sync Error:', errorMsg);
-    
-    // Add a temporary alert for debugging on mobile
-    if (typeof window !== 'undefined') {
-      // Don't alert for every minor error to avoid spamming the user, 
-      // but do alert for major ones
-      if (errorMsg.includes('PGRST204')) {
-        alert(`⚠️ DATABASE SCHEMA ERROR: Please run the SQL migration I provided to add the 'occupation' column.`);
-      } else {
-        alert(`⚠️ SYNC FAILED for ${profile.email}: ${errorMsg}`);
-      }
-    }
+    console.error('Supabase Sync Error:', err);
     return profile;
   }
 };
 
 /**
- * Get profile by email from Supabase.
+ * Get profile by email from Supabase and map to camelCase.
  */
 export const getProfile = async (email: string) => {
   if (!supabaseUrl || !supabaseAnonKey) return null;
 
   try {
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('*')
-    .ilike('email', email)
-    .single();
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .ilike('email', email)
+      .single();
 
-    if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'no rows'
-    return data;
+    if (error && error.code !== 'PGRST116') throw error;
+    if (!data) return null;
+
+    // Map snake_case to camelCase for the app
+    return {
+      ...data,
+      companyName: data.company_name,
+      workSetup: data.work_setup,
+      profileCompleted: data.profile_completed,
+      pointsProfileCompletion: data.points_profile_completion,
+      pointsHRShare: data.points_hr_share,
+      pointsFriendShare: data.points_friend_share,
+      pointsOnboarding: data.points_onboarding,
+      pointsScans: data.points_scans,
+      pointsShared: data.points_shared,
+      ageRange: data.age_range,
+      fitnessLevel: data.fitness_level,
+      workoutFrequency: data.workout_frequency,
+      trainingGoal: data.training_goal
+    };
   } catch (err) {
     console.error('Supabase Fetch Error:', err);
     return null;

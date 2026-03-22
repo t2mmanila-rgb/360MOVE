@@ -39,8 +39,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
       ...profile,
       ...formData,
       profileCompleted: true,
-      pointsProfileCompletion: 10,
-      points: (profile.points || 0) + 10 // Add 10 points for profile completion
+      pointsProfileCompletion: 10
     };
     
     // Sync to Supabase
