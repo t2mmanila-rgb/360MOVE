@@ -84,9 +84,26 @@ const ActivityDetail: React.FC = () => {
           const user = JSON.parse(userStr);
           if (user?.email) {
             const isBrand = id?.startsWith('pb-');
+            
+            // 1. Update localStorage for immediate UI feedback in MyPass.tsx
+            if (isBrand) {
+              const completed = JSON.parse(localStorage.getItem('completed_ids') || '[]');
+              if (!completed.includes(id)) {
+                localStorage.setItem('completed_ids', JSON.stringify([...completed, id]));
+              }
+            } else {
+              const registered = JSON.parse(localStorage.getItem('registered_activity_ids') || '[]');
+              if (!registered.includes(id)) {
+                localStorage.setItem('registered_activity_ids', JSON.stringify([...registered, id]));
+              }
+            }
+
+            // 2. Sync to Supabase with status and on-site flag
             const status = isBrand ? 'completed' : 'checked-in';
             syncUserActivity(user.email, id!, activity.points, user, status, true).then(() => {
               setShowSuccess(true);
+              // Trigger storage event so other components update if necessary
+              window.dispatchEvent(new Event('storage'));
             });
           }
         } catch (e) {
