@@ -655,6 +655,11 @@ const MyPass: React.FC = () => {
             ))}
           </div>
 
+          <div className="flex justify-end items-center gap-2 mb-4">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Zones</span>
+            <ArrowRight className="w-3 h-3 text-white/40" />
+          </div>
+
            {/* Zone-based Passport Challenge */}
            <div className="space-y-16 mt-4">
              {zones.filter(z => z === activeZone).map(zone => (
