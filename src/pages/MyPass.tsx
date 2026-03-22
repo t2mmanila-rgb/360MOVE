@@ -922,8 +922,8 @@ const MyPass: React.FC = () => {
                   )}
 
                    <div className="bg-fs-orange/10 rounded-2xl p-6 mb-8 border border-fs-orange/30 shadow-lg shadow-fs-orange/5">
-                    <p className="text-fs-orange text-xs font-black uppercase tracking-widest leading-relaxed text-center italic">
-                      Note: Points will be credited on the day of the activity after registering on site.
+                    <p className="text-white text-xs font-black uppercase tracking-widest leading-relaxed text-center italic">
+                      Note: Register on site to claim your points
                     </p>
                   </div>
 
