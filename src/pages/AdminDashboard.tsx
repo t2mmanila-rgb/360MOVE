@@ -185,12 +185,11 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Booth Visits (Filter for booth-specific IDs)
-        const boothIds = ['pb-nike', 'pb-skippy', 'pb-chobani', 'pb-goodies', 'pb-viking', 'pb-adidas'];
+        const boothIds = ['pb-skippy', 'pb-chobani', 'pb-goodies', 'pb-adidas'];
         const boothVisits = boothIds.map(id => {
           const nameMap: Record<string, string> = {
-            'pb-nike': 'Nike', 'pb-skippy': 'Skippy', 'pb-chobani': 'Chobani', 
-            'pb-goodies': 'Goodies', 'pb-viking': 'Viking Fitness', 
-            'pb-adidas': 'Adidas'
+            'pb-skippy': 'Skippy', 'pb-chobani': 'Chobani', 
+            'pb-goodies': 'Goodies', 'pb-adidas': 'Adidas'
           };
           return { label: nameMap[id] || id, val: regCounts[id] || 0 };
         }).sort((a,b) => b.val - a.val);

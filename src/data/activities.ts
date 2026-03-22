@@ -165,7 +165,7 @@ export const MOCK_SCHEDULE: Activity[] = [
   },
   {
     id: 'viking-games-sat',
-    title: 'Viking Games by Nordcham',
+    title: 'Viking Games',
     category: 'Competitive',
     duration: '60 min',
     image: '/logos/Viking Games Banner - Fitstreet 2026.png',
@@ -428,20 +428,6 @@ export const B2C_PROGRAMS: Activity[] = [
 
 export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
   {
-    id: 'pb-nike',
-    name: 'Nike',
-    category: 'Movement',
-    description: 'Experience the new Air Max lineage.',
-    booth: 'B12',
-    qrSecret: 'NK-2026-XP',
-    geofenceRadius: '20m',
-    logo: '/logos/360MOVE Square Logo.png',
-    isCompleted: false,
-    zone: 'THE ARENA',
-    mechanics: 'Visit the Nike booth and share your personal movement goal for 2026 on social media using #NikeMovePass.',
-    points: 1
-  },
-  {
     id: 'pb-skippy',
     name: "Skippy",
     category: 'Nutrition',
@@ -482,21 +468,6 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     zone: 'PLAY',
     mechanics: 'Approach the "Goodies Discovery Table" and correctly identify one key natural ingredient in a featured Goodies snack bar.',
     points: 1
-  },
-  {
-    id: 'pb-viking',
-    name: 'Viking Fitness',
-    category: 'Competitive',
-    description: 'The ultimate strength challenge.',
-    booth: 'The Arena',
-    qrSecret: 'VK-2026-VG',
-    geofenceRadius: '30m',
-    logo: '/logos/Viking Games Banner - Fitstreet 2026.png',
-    isCompleted: false,
-    isSignupRequired: true,
-    zone: 'THE ARENA',
-    mechanics: 'Complete the Viking Strength circuit: 20 kettlebell swings and a 30-second plank.',
-    points: 10
   },
   {
     id: 'pb-adidas',
