@@ -220,6 +220,8 @@ const AdminDashboard: React.FC = () => {
           const ovs: any = {};
           data.forEach(row => {
             ovs[row.activity_id] = {
+              title: row.title,
+              image_url: row.image_url,
               category: row.category,
               points: row.points,
               day: row.day,
@@ -269,6 +271,8 @@ const AdminDashboard: React.FC = () => {
       const current = newOverrides[id];
       await supabase.from('activity_overrides').upsert({
         activity_id: id,
+        title: current.title,
+        image_url: current.image_url,
         category: current.category,
         points: current.points,
         day: current.day,
@@ -694,10 +698,18 @@ const AdminDashboard: React.FC = () => {
                     <div className="flex items-center justify-between mb-16">
                       <div className="flex items-center gap-6">
                         <div className="w-16 h-16 rounded-3xl bg-slate-100 overflow-hidden">
-                          <img src={editingActivity.image} alt="" className="w-full h-full object-cover" />
+                          <img src={overrides[editingActivity.id]?.image_url ?? editingActivity.image} alt="" className="w-full h-full object-cover" />
                         </div>
                         <div>
-                          <h4 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 mb-1">{editingActivity.title}</h4>
+                          <div className="space-y-1 mb-1">
+                            <label className="text-[8px] font-black uppercase tracking-widest text-slate-400 block ml-1">Activity Title / Teaser</label>
+                            <input 
+                              type="text" 
+                              value={overrides[editingActivity.id]?.title ?? editingActivity.title}
+                              onChange={(e) => saveOverride(editingActivity.id, 'title', e.target.value)}
+                              className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 bg-transparent border-b border-slate-100 focus:border-fs-cyan outline-none transition-all w-full md:w-[400px]"
+                            />
+                          </div>
                           <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 px-3 py-1 bg-slate-100 rounded-full">{editingActivity.id}</span>
                         </div>
                       </div>
@@ -763,6 +775,19 @@ const AdminDashboard: React.FC = () => {
                             type="text" 
                             value={overrides[editingActivity.id]?.location ?? editingActivity.location}
                             onChange={(e) => saveOverride(editingActivity.id, 'location', e.target.value)}
+                            className="w-full px-6 py-4 bg-slate-50 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-fs-cyan/20 border-transparent transition-all"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between ml-2">
+                            <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Activity Image URL</label>
+                            <span className="text-[8px] font-bold text-fs-cyan uppercase italic">Perfect: 1200x675</span>
+                          </div>
+                          <input 
+                            type="text" 
+                            value={overrides[editingActivity.id]?.image_url ?? editingActivity.image}
+                            onChange={(e) => saveOverride(editingActivity.id, 'image_url', e.target.value)}
+                            placeholder="https://example.com/image.jpg"
                             className="w-full px-6 py-4 bg-slate-50 rounded-2xl text-xs font-bold outline-none focus:ring-2 focus:ring-fs-cyan/20 border-transparent transition-all"
                           />
                         </div>

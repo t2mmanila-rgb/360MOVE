@@ -32,6 +32,8 @@ export const useActivity = () => {
         const overrides: Record<string, Partial<Activity>> = {};
         data.forEach((row: any) => {
           overrides[row.activity_id] = {
+            title: row.title,
+            image: row.image_url,
             category: row.category,
             points: row.points,
             day: row.day,
