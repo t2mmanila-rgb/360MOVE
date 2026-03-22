@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, BarChart3, Save, Trash2, Clock, MapPin, ChevronRight,
-  Search, CheckSquare, Square, X,
+  Search, CheckSquare, Square, X, CheckCircle2,
   Activity, Target, Zap, Sparkles, Lock, Settings, PieChart, Heart, QrCode,
   Utensils
 } from 'lucide-react';
@@ -895,12 +895,16 @@ const AdminDashboard: React.FC = () => {
                                   <td className="px-6 py-5">
                                     <div className="flex justify-center">
                                       <span className={cn(
-                                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight",
+                                        "px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-sm",
                                         atdt.is_onsite 
-                                          ? "bg-green-100 text-green-600" 
-                                          : "bg-orange-100 text-orange-600"
+                                          ? "bg-green-100 text-green-600 border border-green-200" 
+                                          : "bg-orange-50 text-orange-600 border border-orange-100"
                                       )}>
-                                        {atdt.is_onsite ? 'Logged On-Site' : 'Pre-Registered'}
+                                        {atdt.is_onsite ? (
+                                          <><CheckCircle2 className="w-3.5 h-3.5" /> Checked In</>
+                                        ) : (
+                                          <><Clock className="w-3.5 h-3.5 opacity-50" /> Pre-Reg</>
+                                        )}
                                       </span>
                                     </div>
                                   </td>
