@@ -70,12 +70,19 @@ const Navbar: React.FC = () => {
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2 group">
+          <Link to="/" className="flex items-center gap-4 group">
             <img 
               src="/logos/360MOVE Logo.png" 
               alt="360MOVE" 
               className="h-12 md:h-16 w-auto transition-transform group-hover:scale-105" 
             />
+            {userProfile && (
+              <img 
+                src="/logos/Fitstreet Logo simple.png" 
+                alt="Fitstreet" 
+                className="h-12 md:h-16 w-auto transition-transform" 
+              />
+            )}
           </Link>
 
           {/* Desktop Nav */}
