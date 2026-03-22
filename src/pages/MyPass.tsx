@@ -627,7 +627,7 @@ const MyPass: React.FC = () => {
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100" />
                         
                         <div className="absolute inset-0 p-8 flex flex-col justify-end items-center text-center gap-2">
-                          <span className={`text-[10px] font-black uppercase tracking-[0.2em] text-white drop-shadow-md`}>{brand.name}</span>
+                          <span className={`text-xs font-black uppercase tracking-[0.2em] text-white drop-shadow-md`}>{brand.name}</span>
                           <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-white/60 tracking-widest opacity-80">
                             <MapPin className="w-3 h-3" /> {brand.booth}
                           </div>
@@ -654,7 +654,7 @@ const MyPass: React.FC = () => {
                         }`} />
                         
                         <div className="absolute inset-0 p-8 pt-24 flex flex-col justify-end items-center text-center gap-6">
-                          <h4 className="text-xl font-black uppercase italic leading-tight tracking-tighter text-white drop-shadow-lg">
+                          <h4 className="text-lg font-black uppercase italic leading-tight tracking-tighter text-white drop-shadow-lg">
                             {activity.title}
                           </h4>
                           
