@@ -32,6 +32,7 @@ const AdminDashboard: React.FC = () => {
   const fetchAttendees = async (activityId: string) => {
     setIsAttendeesLoading(true);
     try {
+      // Try full select first
       const { data, error } = await supabase
         .from('user_activities')
         .select(`
@@ -48,10 +49,32 @@ const AdminDashboard: React.FC = () => {
         .eq('activity_id', activityId)
         .order('registered_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+         console.warn('[Admin] Attendee fetch full profile failed, retrying minimal...', error.message);
+         // Fallback: Just the activity data + email
+         const { data: minimalData, error: minimalError } = await supabase
+           .from('user_activities')
+           .select(`
+             id,
+             user_email,
+             registered_at,
+             is_onsite
+           `)
+           .eq('activity_id', activityId)
+           .order('registered_at', { ascending: false });
+           
+         if (minimalError) throw minimalError;
+         setAttendees(minimalData || []);
+         return;
+      }
+      
       setAttendees(data || []);
     } catch (err) {
       console.error('Error fetching attendees:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      if (msg.includes('PGRST204')) {
+        alert("⚠️ DATABASE SCHEMA ERROR: Your Supabase table is missing some columns (like age_range or gender). Please run the SQL migration I provided.");
+      }
     } finally {
       setIsAttendeesLoading(false);
     }

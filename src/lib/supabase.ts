@@ -98,11 +98,11 @@ export const getProfile = async (email: string) => {
   if (!supabaseUrl || !supabaseAnonKey) return null;
 
   try {
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', email.toLowerCase())
-      .single();
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .ilike('email', email)
+    .single();
 
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'no rows'
     return data;
@@ -130,7 +130,7 @@ export const syncUserActivity = async (email: string, activityId: string, points
   console.log(`[Supabase] Syncing activity ${activityId} for user ${lowerEmail}...`);
   try {
     // 1. Ensure profile exists first (retry/recovery logic)
-    const { data: profileExists } = await supabase.from('profiles').select('email').eq('email', lowerEmail).single();
+    const { data: profileExists } = await supabase.from('profiles').select('email').ilike('email', lowerEmail).single();
     
     if (!profileExists && userProfile) {
       console.log('Profile missing in Supabase during activity sync, creating...', lowerEmail);
