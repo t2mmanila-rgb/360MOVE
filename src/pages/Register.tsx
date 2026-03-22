@@ -44,7 +44,7 @@ const Register: React.FC = () => {
       ...formData,
       categories: formData.interests, // Map interests to categories for MyPass.tsx compatibility
       personalized: true, 
-      points: 1 // Award 1 point starter bonus
+      points: 30 // Award 30 point starter bonus for 360MOVE
     };
     
     // Clear existing local state to prevent leakage between test users

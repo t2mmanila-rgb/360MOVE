@@ -87,10 +87,10 @@ const GenericDashboard: React.FC = () => {
   };
 
   const calculatePoints = () => {
-    const starterPoints = 1;
+    const base = genericUser?.points ?? 30;
     const profilePoints = genericUser?.profileCompleted ? 10 : 0;
-    const sharePoints = genericUser?.pointsHRShare || 0;
-    return starterPoints + profilePoints + sharePoints;
+    const sharePoints = genericUser?.points_hr_share || 0;
+    return base + profilePoints + sharePoints;
   };
 
   const handlePointsEarned = async (updatedProfile: any) => {

@@ -252,7 +252,7 @@ const MyPass: React.FC = () => {
 
     const profilePoints = (userProfile?.profileCompleted ? 10 : 0);
     const sharePoints = userProfile?.pointsHRShare || 0;
-    const starterPoints = 1;
+    const starterPoints = userProfile?.points ?? 1;
     
     return starterPoints + passportPoints + registrationPoints + profilePoints + sharePoints;
   };
