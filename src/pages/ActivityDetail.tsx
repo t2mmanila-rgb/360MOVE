@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, Star, ArrowLeft, Share2, Heart, Zap, ShieldCheck, Sparkles, User } from 'lucide-react';
 import { useActivity } from '../lib/useActivity';
-import type { Activity } from '../data/activities';
 
 const ActivityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
