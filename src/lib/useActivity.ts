@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { MOCK_SCHEDULE, B2C_PROGRAMS, type Activity } from '../data/activities';
+import { MOCK_SCHEDULE, B2C_PROGRAMS, B2B_PASSPORT_BRANDS, type Activity, type PassportBrand } from '../data/activities';
 
 export const useActivity = () => {
   const [schedule, setSchedule] = useState<Activity[]>(MOCK_SCHEDULE);
   const [programs, setPrograms] = useState<Activity[]>(B2C_PROGRAMS);
+  const [brands] = useState<PassportBrand[]>(B2B_PASSPORT_BRANDS);
 
   const applyOverrides = (overrides: Record<string, Partial<Activity>>) => {
     const updatedSchedule = MOCK_SCHEDULE.map(activity => {
@@ -75,5 +76,5 @@ export const useActivity = () => {
     };
   }, []);
 
-  return { schedule, programs, refresh: fetchOverrides };
+  return { schedule, programs, brands, refresh: fetchOverrides };
 };

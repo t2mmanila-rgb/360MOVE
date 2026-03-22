@@ -7,11 +7,31 @@ import { useActivity } from '../lib/useActivity';
 const ActivityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { schedule, programs } = useActivity();
+  const { schedule, programs, brands } = useActivity();
 
   // Find the actual program from our merged record
   const activity = React.useMemo(() => {
+    // Search in all data sources
     const allActivities = [...schedule, ...programs];
+    const brandMatch = brands?.find(b => b.id === id);
+    
+    // Convert brand to activity-like object if matched
+    if (brandMatch) {
+      return {
+        title: brandMatch.name,
+        category: brandMatch.category,
+        points: brandMatch.points || 1,
+        duration: 'Boots Visit',
+        location: brandMatch.booth,
+        instructor: 'Brand Representative',
+        description: brandMatch.description,
+        extendedDescription: brandMatch.extendedDescription,
+        mechanics: brandMatch.mechanics,
+        image: brandMatch.logo || '/activities/rope_flow_premium.png',
+        isPaid: false
+      };
+    }
+
     const found = allActivities.find(p => 
       p.id === id || 
       p.title?.toLowerCase().replace(/\s+/g, '-') === id
