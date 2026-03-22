@@ -1,13 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Zap, ChevronRight, Share2, Ticket, Sparkles, Map } from 'lucide-react';
-import { MOCK_SCHEDULE, type Activity } from '../data/activities';
+import { type Activity } from '../data/activities';
+import { useActivity } from '../lib/useActivity';
 import Onboarding from '../components/Onboarding';
 import MobileFooter from '../components/MobileFooter';
 import { useNavigate, Link } from 'react-router-dom';
 import UniversalCard from '../components/UniversalCard';
 
 const FitstreetEvent: React.FC = () => {
+  const { schedule } = useActivity();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const navigate = useNavigate();
 
@@ -23,7 +25,7 @@ const FitstreetEvent: React.FC = () => {
     navigate('/my-pass');
   };
 
-  const featuredActivities = MOCK_SCHEDULE.slice(0, 6);
+  const featuredActivities = schedule.slice(0, 6);
 
   const zones = [
     { name: 'Power Zone', desc: 'HIIT, CrossFit, and Strength challenges.', color: 'fs-orange', icon: Zap },

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, Zap, Star, X, MapPin, Clock, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { B2C_PROGRAMS, type Activity } from '../data/activities';
+import { type Activity } from '../data/activities';
+import { useActivity } from '../lib/useActivity';
 import EarnPointsModal from '../components/EarnPointsModal';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '../lib/utils';
@@ -11,6 +12,7 @@ const GenericDashboard: React.FC = () => {
   const [registeredPrograms, setRegisteredPrograms] = useState<string[]>([]);
   const [showEarnPointsModal, setShowEarnPointsModal] = useState(false);
   const [selectedProgram, setSelectedProgram] = useState<Activity | null>(null);
+  const { programs: B2CConfig } = useActivity();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,20 +30,42 @@ const GenericDashboard: React.FC = () => {
     }
   }, [navigate]);
 
-  const handleRegisterProgram = (id: string, e?: React.MouseEvent) => {
+  const handleRegisterProgram = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (registeredPrograms.includes(id)) return;
     
     const newRegistered = [...registeredPrograms, id];
     setRegisteredPrograms(newRegistered);
     localStorage.setItem('registered_generic_activities', JSON.stringify(newRegistered));
+
+    // Sync to Supabase
+    if (genericUser?.email) {
+      try {
+        const { syncUserActivity } = await import('../lib/supabase');
+        // Find points from programs config
+        const activity = B2CConfig.find(p => p.id === id || p.title === id);
+        await syncUserActivity(genericUser.email, id, activity?.points || 10);
+      } catch (err) {
+        console.warn('Supabase registration sync failed:', err);
+      }
+    }
   };
 
-  const handleUnregisterProgram = (id: string, e: React.MouseEvent) => {
+  const handleUnregisterProgram = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const newRegistered = registeredPrograms.filter(progId => progId !== id);
     setRegisteredPrograms(newRegistered);
     localStorage.setItem('registered_generic_activities', JSON.stringify(newRegistered));
+
+    // Sync to Supabase
+    if (genericUser?.email) {
+      try {
+        const { deleteUserActivity } = await import('../lib/supabase');
+        await deleteUserActivity(genericUser.email, id);
+      } catch (err) {
+        console.warn('Supabase cancellation sync failed:', err);
+      }
+    }
   };
 
   const calculatePoints = () => {
@@ -51,15 +75,24 @@ const GenericDashboard: React.FC = () => {
     
     // Add points for registered programs
     const registeredPoints = registeredPrograms.reduce((total, id) => {
-      const prog = B2C_PROGRAMS.find(p => p.id === id);
+      const prog = B2CConfig.find(p => p.id === id);
       return total + (prog?.points || 10);
     }, 0);
 
     return points + registeredPoints;
   };
 
-  const handlePointsEarned = (updatedProfile: any) => {
+  const handlePointsEarned = async (updatedProfile: any) => {
     setGenericUser(updatedProfile);
+    
+    // Sync to Supabase
+    try {
+      const { syncProfile } = await import('../lib/supabase');
+      await syncProfile(updatedProfile, 'generic');
+    } catch (err) {
+      console.warn('Supabase generic points sync failed:', err);
+    }
+
     localStorage.setItem('generic_user_profile', JSON.stringify(updatedProfile));
   };
 
@@ -228,7 +261,7 @@ const GenericDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {B2C_PROGRAMS.map((program) => {
+            {B2CConfig.map((program) => {
               const progId = program.id || program.title;
               const isRegistered = registeredPrograms.includes(progId);
               return (

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, MapPin, Zap, Calendar, ArrowLeft, ArrowRight, X, Info, CheckCircle2 } from 'lucide-react';
-import { MOCK_SCHEDULE, type Activity } from '../data/activities';
+import { type Activity } from '../data/activities';
+import { useActivity } from '../lib/useActivity';
 import { logRegistrationToSheet } from '../lib/google-sheets';
 import { useNavigate } from 'react-router-dom';
 import MobileFooter from '../components/MobileFooter';
@@ -12,6 +13,7 @@ const Schedule: React.FC = () => {
     const eventDay2 = new Date('2026-05-10T00:00:00');
     return now >= eventDay2 ? 'May 10' : 'May 9';
   });
+  const { schedule } = useActivity();
   const navigate = useNavigate();
   const [selectedItem, setSelectedItem] = useState<Activity | null>(null);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -49,7 +51,7 @@ const Schedule: React.FC = () => {
     }
   };
 
-  const dayEvents = MOCK_SCHEDULE.filter(event => 
+  const dayEvents = schedule.filter(event => 
     activeDay === 'May 9' ? event.day?.includes('May 9') : event.day?.includes('May 10')
   );
 

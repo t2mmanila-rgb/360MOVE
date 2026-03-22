@@ -1,8 +1,8 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, CheckCircle2, LayoutDashboard, Map as MapIcon, X, Calendar, MapPin, Info, ArrowRight, Zap, Star, User, Clock } from 'lucide-react';
-import { B2B_PASSPORT_BRANDS, MOCK_SCHEDULE } from '../data/activities';
-import type { Activity, PassportBrand } from '../data/activities';
+import { B2B_PASSPORT_BRANDS, type Activity, type PassportBrand } from '../data/activities';
+import { useActivity } from '../lib/useActivity';
 import { resolveDriveImageUrl, logRegistrationToSheet, syncUserProfileToSheet, fetchGoogleSheetData, PASSPORT_CHALLENGE_SHEET_ID } from '../lib/google-sheets';
 import MobileFooter from '../components/MobileFooter';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -12,6 +12,7 @@ import { cn } from '../lib/utils';
 type ViewMode = 'dashboard' | 'passport';
 
 const MyPass: React.FC = () => {
+  const { schedule } = useActivity();
   const [userProfile, setUserProfile] = React.useState<any>(null);
   const [completedIds, setCompletedIds] = React.useState<string[]>([]);
   const [registeredActivityIds, setRegisteredActivityIds] = React.useState<string[]>([]);
@@ -22,8 +23,8 @@ const MyPass: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [successActivity, setSuccessActivity] = React.useState<Activity | null>(null);
-  const [brands, setBrands] = React.useState<PassportBrand[]>(B2B_PASSPORT_BRANDS);
-  const [activities, setActivities] = React.useState<Activity[]>(MOCK_SCHEDULE);
+  const [brands, setBrands] = React.useState<PassportBrand[]>([]); // Will load from original source or API
+  const [activities, setActivities] = React.useState<Activity[]>([]);
   const [isExpanded, setIsExpanded] = React.useState(false);
   const navigate = useNavigate();
 
@@ -93,7 +94,7 @@ const MyPass: React.FC = () => {
         setBrands(updatedBrands);
 
         // Also merge remote data with existing activities (like Viking Games)
-        const updatedActivities = MOCK_SCHEDULE.map(localAct => {
+        const updatedActivities = schedule.map(localAct => {
           const remoteAct = remoteData.find((r: any) => {
             const rName = r['Brand Name'] || r.name || r.Brand || '';
             const normalizedRName = rName.toLowerCase();
@@ -118,15 +119,32 @@ const MyPass: React.FC = () => {
     syncBrands();
   }, []);
 
-  const handleRegisterActivity = (id: string, e?: React.MouseEvent) => {
+  // Keep activities strictly synced with useActivity local overrides
+  React.useEffect(() => {
+    if (activities.length === 0 || schedule.length > 0) { // Naive dependency update for schedule
+      setActivities(schedule);
+    }
+  }, [schedule]);
+
+  const handleRegisterActivity = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     if (registeredActivityIds.includes(id)) return;
     
-    const activity = MOCK_SCHEDULE.find(a => a.id === id);
+    const activity = schedule.find(a => a.id === id);
     if (activity) {
       setSuccessActivity(activity);
       setShowSuccessModal(true);
       
+      // Sync to Supabase
+      if (userProfile?.email) {
+        try {
+          const { syncUserActivity } = await import('../lib/supabase');
+          await syncUserActivity(userProfile.email, id, activity.points);
+        } catch (err) {
+          console.warn('Supabase registration sync failed:', err);
+        }
+      }
+
       // Log to Google Sheet (Placeholder Script URL)
       logRegistrationToSheet('https://script.google.com/macros/s/AKfycbz_placeholder/exec', {
         userId: userProfile?.mobile || 'unknown',
@@ -143,12 +161,22 @@ const MyPass: React.FC = () => {
     localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
   };
 
-  const handleUnregisterActivity = (id: string, e: React.MouseEvent) => {
+  const handleUnregisterActivity = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     const newRegistered = registeredActivityIds.filter(actId => actId !== id);
     setRegisteredActivityIds(newRegistered);
     localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
     
+    // Sync to Supabase
+    if (userProfile?.email) {
+      try {
+        const { deleteUserActivity } = await import('../lib/supabase');
+        await deleteUserActivity(userProfile.email, id);
+      } catch (err) {
+        console.warn('Supabase cancellation sync failed:', err);
+      }
+    }
+
     if (selectedItem) {
       logRegistrationToSheet('https://script.google.com/macros/s/AKfycby7--LX2UwK649yFZW8rvjnpxnuIoPoBp_3fN3_nblt03Tm4JWUndvvgb4wZJPnQ38w/exec', {
         userId: userProfile?.mobile || 'unknown',
@@ -161,7 +189,7 @@ const MyPass: React.FC = () => {
     }
   };
 
-  const handleScanSuccess = (decodedTextValue: string) => {
+  const handleScanSuccess = async (decodedTextValue: string) => {
     // In a real app, decodedTextValue would contain the brand ID or a secure token
     // For this simulation, we'll mark the first uncompleted brand as completed
     const brandId = decodedTextValue; // Assuming decodedTextValue is the brand ID
@@ -192,6 +220,15 @@ const MyPass: React.FC = () => {
       };
       setUserProfile(updated);
       localStorage.setItem('user_profile', JSON.stringify(updated));
+      
+      // Sync to Supabase
+      try {
+        const { syncProfile } = await import('../lib/supabase');
+        await syncProfile(updated, 'fitstreet');
+      } catch (err) {
+        console.warn('Supabase scan sync failed:', err);
+      }
+
       syncUserProfileToSheet(updated);
 
       // Auto-open success state feedback
@@ -219,8 +256,17 @@ const MyPass: React.FC = () => {
     return passportPoints + registrationPoints + profilePoints + sharePoints;
   };
 
-  const handlePointsEarned = (updatedProfile: any) => {
+  const handlePointsEarned = async (updatedProfile: any) => {
     setUserProfile(updatedProfile);
+    
+    // Sync to Supabase
+    try {
+      const { syncProfile } = await import('../lib/supabase');
+      await syncProfile(updatedProfile, 'fitstreet');
+    } catch (err) {
+      console.warn('Supabase points earned sync failed:', err);
+    }
+
     syncUserProfileToSheet(updatedProfile);
   };
 

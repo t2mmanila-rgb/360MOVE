@@ -31,7 +31,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
 
   const nextStep = () => setStep(s => s + 1);
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const savedProfile = localStorage.getItem(storageKey);
     const profile = savedProfile ? JSON.parse(savedProfile) : {};
     
@@ -43,6 +43,15 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
       points: (profile.points || 0) + 1 // Add 1 point for profile completion
     };
     
+    // Sync to Supabase
+    try {
+      const { syncProfile } = await import('../lib/supabase');
+      const profileType = storageKey.includes('generic') ? 'generic' : 'fitstreet';
+      await syncProfile(updatedProfile, profileType as any);
+    } catch (err) {
+      console.warn('Supabase profile completion sync failed:', err);
+    }
+
     localStorage.setItem(storageKey, JSON.stringify(updatedProfile));
     
     if (formData.workSetup === 'Corporate') {
@@ -76,6 +85,16 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
         pointsHRShare: (profile.pointsHRShare || 0) + 1,
         points: (profile.points || 0) + 1
       };
+
+      // Sync to Supabase
+      try {
+        const { syncProfile } = await import('../lib/supabase');
+        const profileType = storageKey.includes('generic') ? 'generic' : 'fitstreet';
+        await syncProfile(updated, profileType as any);
+      } catch (err) {
+        console.warn('Supabase HR share sync failed:', err);
+      }
+
       localStorage.setItem(storageKey, JSON.stringify(updated));
       onComplete(updated);
       setShowSharePopup(false);

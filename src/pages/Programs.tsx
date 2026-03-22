@@ -2,15 +2,16 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Sparkles } from 'lucide-react';
 import UniversalCard from '../components/UniversalCard';
-import { B2C_PROGRAMS } from '../data/activities';
+import { useActivity } from '../lib/useActivity';
 
 const Programs: React.FC = () => {
+  const { programs: B2CConfig } = useActivity();
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
 
   const categories = ['All', 'Physical', 'Mindfulness', 'Nutrition', 'Dance', 'Corporate Wellness'];
 
-  const filteredPrograms = B2C_PROGRAMS.filter(p => {
+  const filteredPrograms = B2CConfig.filter(p => {
     const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
     const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
                           p.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -44,7 +45,7 @@ const Programs: React.FC = () => {
             <span className="text-[10px] font-black uppercase tracking-widest text-slate-300">Live Status</span>
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 bg-brand-turquoise rounded-full animate-pulse" />
-              <span className="text-slate-900 font-black italic">{B2C_PROGRAMS.length} Active Sessions</span>
+              <span className="text-slate-900 font-black italic">{B2CConfig.length} Active Sessions</span>
             </div>
           </div>
         </header>

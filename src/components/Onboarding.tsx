@@ -40,7 +40,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
 
   const nextStep = () => setStep(s => s + 1);
 
-  const handleFinalize = () => {
+  const handleFinalize = async () => {
     const savedProfile = localStorage.getItem('user_profile');
     const profile = savedProfile ? JSON.parse(savedProfile) : {};
     const updatedProfile = { 
@@ -51,6 +51,15 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
       pointsOnboarding: 1,
       signupDate: formData.signupDate || new Date().toISOString()
     };
+    
+    // Sync to Supabase
+    try {
+      const { syncProfile } = await import('../lib/supabase');
+      await syncProfile(updatedProfile, 'fitstreet');
+    } catch (err) {
+      console.warn('Supabase onboarding sync failed:', err);
+    }
+
     console.log('Finalizing Onboarding - Saving Profile:', updatedProfile);
     localStorage.setItem('user_profile', JSON.stringify(updatedProfile));
     syncUserProfileToSheet(updatedProfile);

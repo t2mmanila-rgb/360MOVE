@@ -38,13 +38,22 @@ const Register: React.FC = () => {
     }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     // Save to local storage for My Pass page
     const finalData = {
       ...formData,
       categories: formData.interests, // Map interests to categories for MyPass.tsx compatibility
       personalized: true // Mark as personalized since we are skipping the onboarding/interest steps for now
     };
+    
+    // Sync to Supabase
+    try {
+      const { syncProfile } = await import('../lib/supabase');
+      await syncProfile(finalData, 'generic');
+    } catch (err) {
+      console.warn('Supabase sync skipped or failed:', err);
+    }
+
     localStorage.setItem('generic_user_profile', JSON.stringify(finalData));
     localStorage.setItem('is_generic_logged_in', 'true');
     // Navigate to Member Dashboard
