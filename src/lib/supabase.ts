@@ -80,6 +80,7 @@ export const getProfile = async (email: string) => {
 export const syncUserActivity = async (email: string, activityId: string, points: number = 0) => {
   if (!supabaseUrl || !supabaseAnonKey) return;
 
+  console.log(`[Supabase] Syncing activity ${activityId} for user ${email}...`);
   try {
     const { error } = await supabase
       .from('user_activities')
@@ -90,12 +91,16 @@ export const syncUserActivity = async (email: string, activityId: string, points
         registered_at: new Date().toISOString()
       }, { onConflict: 'user_email,activity_id' });
 
-    if (error) throw error;
-  } catch (err) {
-    console.warn('Supabase activity sync failed:', err);
-    if (typeof window !== 'undefined') {
-      alert(`⚠️ ACTIVITY SYNC FAILED: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
+    if (error) {
+      console.error('[Supabase] Activity sync error:', error);
+      if (typeof window !== 'undefined') {
+        alert(`⚠️ ACTIVITY SYNC FAILED: ${error.message}`);
+      }
+      throw error;
     }
+    console.log('[Supabase] Activity sync successful.');
+  } catch (err) {
+    console.warn('[Supabase] Activity sync failed:', err);
   }
 };
 
