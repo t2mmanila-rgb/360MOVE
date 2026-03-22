@@ -185,10 +185,10 @@ const AdminDashboard: React.FC = () => {
         }
 
         // Booth Visits (Filter for booth-specific IDs)
-        const boothIds = ['pb-nike', 'pb-skippys', 'pb-chobani', 'pb-goodies', 'pb-gballers', 'pb-viking', 'pb-adidas'];
+        const boothIds = ['pb-nike', 'pb-skippy', 'pb-chobani', 'pb-goodies', 'pb-gballers', 'pb-viking', 'pb-adidas'];
         const boothVisits = boothIds.map(id => {
           const nameMap: Record<string, string> = {
-            'pb-nike': 'Nike', 'pb-skippys': "Skippy's", 'pb-chobani': 'Chobani', 
+            'pb-nike': 'Nike', 'pb-skippy': 'Skippy', 'pb-chobani': 'Chobani', 
             'pb-goodies': 'Goodies', 'pb-gballers': "G'Ballers", 'pb-viking': 'Viking Fitness', 
             'pb-adidas': 'Adidas'
           };

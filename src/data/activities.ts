@@ -442,14 +442,14 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     points: 1
   },
   {
-    id: 'pb-skippys',
-    name: "Skippy's",
+    id: 'pb-skippy',
+    name: "Skippy",
     category: 'Nutrition',
     description: '"Where There\'s a Jar, There\'s Joy." High-protein fuel for the active urbanite.',
     booth: 'B05',
     qrSecret: 'SK-2026-PB',
     geofenceRadius: '20m',
-    logo: '1yZ9X_placeholder_skippys_id', 
+    logo: '1yZ9X_placeholder_skippy_id', 
     isCompleted: false,
     zone: 'EAT',
     mechanics: 'Visit the "Skippy Joy Station" and hold a 15-second "Peanut Butter Power-Up" pose (e.g., a "Flex for Joy") in front of the giant iconic teal jar.',
