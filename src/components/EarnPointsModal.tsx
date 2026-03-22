@@ -287,7 +287,7 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
                   <Gift className="w-10 h-10 text-fs-pink" />
                 </div>
                 <h3 className="text-2xl font-black italic uppercase italic tracking-tighter mb-4 text-white">Bonus Goal!</h3>
-                <p className="text-slate-400 mb-8 font-medium">Earn **10 EXTRA POINTS** for telling us where you work and sharing Fitstreet with your HR team.</p>
+                <p className="text-slate-400 mb-8 font-medium">Join the corporate challenge! Share this with your HR and earn 10 extra points.</p>
                 <div className="space-y-4">
                   <button 
                     onClick={handleShare}
