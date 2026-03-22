@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  BarChart3, Users, Search, QrCode,
-  Activity, Target, Zap, 
-  Sparkles, Lock, Settings, PieChart, 
-  Save, Edit3, Trash2, Heart, Utensils
+  Users, BarChart3, Edit3, Save, Trash2, Calendar, Clock, MapPin, 
+  ChevronRight, Plus, X, Search, Filter, Download, CheckSquare, Square,
+  Activity, Target, Zap, Sparkles, Lock, Settings, PieChart, Heart, QrCode,
+  Activity as ActivityIcon, Utensils
 } from 'lucide-react';
+import { supabase } from '../lib/supabase';
 import { useActivity } from '../lib/useActivity';
 import { cn } from '../lib/utils';
 
@@ -25,6 +26,78 @@ const AdminDashboard: React.FC = () => {
     demographics: [],
     categories: []
   });
+  const [attendees, setAttendees] = useState<any[]>([]);
+  const [isAttendeesLoading, setIsAttendeesLoading] = useState(false);
+
+  const fetchAttendees = async (activityId: string) => {
+    setIsAttendeesLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('user_activities')
+        .select(`
+          id,
+          user_email,
+          registered_at,
+          is_onsite,
+          profiles:user_email (
+            name,
+            age_range,
+            gender
+          )
+        `)
+        .eq('activity_id', activityId)
+        .order('registered_at', { ascending: false });
+
+      if (error) throw error;
+      setAttendees(data || []);
+    } catch (err) {
+      console.error('Error fetching attendees:', err);
+    } finally {
+      setIsAttendeesLoading(false);
+    }
+  };
+
+  const handleToggleOnsite = async (registrationId: number, currentStatus: boolean) => {
+    try {
+      const { error } = await supabase
+        .from('user_activities')
+        .update({ is_onsite: !currentStatus })
+        .eq('id', registrationId);
+
+      if (error) throw error;
+      
+      // Update local state
+      setAttendees(prev => prev.map(a => 
+        a.id === registrationId ? { ...a, is_onsite: !currentStatus } : a
+      ));
+    } catch (err) {
+      console.error('Error updating onsite status:', err);
+      alert('Failed to update status');
+    }
+  };
+
+  useEffect(() => {
+    if (editingActivity?.id) {
+      fetchAttendees(editingActivity.id);
+      
+      // Real-time subscription for attendees
+      const channel = supabase
+        .channel(`attendees-${editingActivity.id}`)
+        .on('postgres_changes', { 
+          event: '*', 
+          schema: 'public', 
+          table: 'user_activities',
+          filter: `activity_id=eq.${editingActivity.id}`
+        }, () => {
+          fetchAttendees(editingActivity.id);
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
+    }
+  }, [editingActivity?.id]);
 
   const fetchStats = async () => {
     try {
@@ -682,6 +755,102 @@ const AdminDashboard: React.FC = () => {
                         onChange={(e) => saveOverride(editingActivity.id, 'description', e.target.value)}
                         className="w-full px-8 py-6 bg-slate-50 rounded-[2rem] text-sm font-medium leading-relaxed outline-none focus:ring-2 focus:ring-fs-cyan/20 border-transparent transition-all resize-none"
                       />
+                    </div>
+
+                    {/* Attendees List Section */}
+                    <div className="mt-16 space-y-8">
+                      <div className="flex items-center justify-between border-b border-slate-50 pb-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center">
+                            <Users className="w-6 h-6 text-fs-cyan" />
+                          </div>
+                          <div>
+                            <h3 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">Attendees List.</h3>
+                            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Real-time Registration Data</p>
+                          </div>
+                        </div>
+                        <div className="bg-fs-cyan/10 px-4 py-2 rounded-full text-fs-cyan text-[10px] font-black uppercase tracking-widest">
+                          {attendees.length} Total Registered
+                        </div>
+                      </div>
+
+                      {isAttendeesLoading ? (
+                        <div className="py-20 text-center text-slate-400 font-bold uppercase italic tracking-widest animate-pulse">
+                          Synchronizing with Supabase...
+                        </div>
+                      ) : attendees.length > 0 ? (
+                        <div className="overflow-hidden rounded-[2rem] border border-slate-100">
+                          <table className="w-full text-left border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50">
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Name</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Demographics</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-center">Reg Type</th>
+                                <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Action</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-100">
+                              {attendees.map((atdt) => (
+                                <tr key={atdt.id} className="hover:bg-slate-50/50 transition-colors">
+                                  <td className="px-6 py-5">
+                                    <div className="text-sm font-black text-slate-900 uppercase italic leading-none mb-1">
+                                      {atdt.profiles?.name || 'Anonymous Move Member'}
+                                    </div>
+                                    <div className="text-[9px] font-medium text-slate-400">{atdt.user_email}</div>
+                                  </td>
+                                  <td className="px-6 py-5">
+                                    <div className="flex items-center justify-center gap-2">
+                                      <span className="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold text-slate-600 uppercase">
+                                        {atdt.profiles?.age_range || '--'}
+                                      </span>
+                                      <span className="bg-slate-100 px-2 py-1 rounded text-[10px] font-bold text-slate-600 uppercase">
+                                        {atdt.profiles?.gender || '--'}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-5">
+                                    <div className="flex justify-center">
+                                      <span className={cn(
+                                        "px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-tight",
+                                        atdt.is_onsite 
+                                          ? "bg-green-100 text-green-600" 
+                                          : "bg-orange-100 text-orange-600"
+                                      )}>
+                                        {atdt.is_onsite ? 'Logged On-Site' : 'Pre-Registered'}
+                                      </span>
+                                    </div>
+                                  </td>
+                                  <td className="px-6 py-5">
+                                    <div className="flex justify-end">
+                                      <button 
+                                        onClick={() => handleToggleOnsite(atdt.id, atdt.is_onsite)}
+                                        className={cn(
+                                          "flex items-center gap-2 px-4 py-2 rounded-xl text-[10px] font-black uppercase transition-all",
+                                          atdt.is_onsite 
+                                            ? "bg-slate-100 text-slate-400 hover:bg-slate-200" 
+                                            : "bg-fs-cyan text-slate-900 shadow-lg shadow-fs-cyan/20 hover:scale-105"
+                                        )}
+                                      >
+                                        {atdt.is_onsite ? (
+                                          <><CheckSquare className="w-3.5 h-3.5" /> Checked In</>
+                                        ) : (
+                                          <><Square className="w-3.5 h-3.5" /> Check In</>
+                                        )}
+                                      </button>
+                                    </div>
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ) : (
+                        <div className="py-20 text-center bg-slate-50 rounded-[2rem] border border-dashed border-slate-200">
+                          <Users className="w-12 h-12 text-slate-200 mx-auto mb-4" />
+                          <h4 className="text-xl font-black italic uppercase tracking-tighter text-slate-300">No Attendees Yet.</h4>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest max-w-[200px] mx-auto mt-2 text-center">As users activate this program on their phones, they will appear here.</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="mt-12 p-8 rounded-[3rem] bg-fs-cyan/10 border border-fs-cyan/20 flex items-center justify-between">
