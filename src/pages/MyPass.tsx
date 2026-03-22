@@ -602,10 +602,10 @@ const MyPass: React.FC = () => {
                        key={brand.id}
                        whileTap={{ scale: 0.95 }}
                        onClick={() => { setSelectedItem(brand); setIsExpanded(false); }}
-                       className={`relative aspect-square rounded-[3rem] border transition-all duration-500 overflow-hidden flex flex-col items-center justify-center p-6 cursor-pointer ${
+                       className={`relative aspect-square rounded-[3rem] border transition-all duration-500 overflow-hidden group cursor-pointer ${
                          completedIds.includes(brand.id) 
                            ? 'bg-white/10 border-fs-cyan/50 shadow-[0_0_40px_rgba(45,212,191,0.15)]' 
-                           : 'bg-white/5 border-white/5 hover:border-slate-500 group'
+                           : 'bg-white/5 border-white/5 hover:border-slate-500'
                        }`}
                      >
                         <div className="absolute top-5 right-5 transition-transform duration-500 group-hover:scale-110">
@@ -621,12 +621,16 @@ const MyPass: React.FC = () => {
                         </div>
                         <img 
                           src={resolveDriveImageUrl(brand.logo)} 
-                          className={`w-20 h-20 object-contain mb-4 transition-all duration-700 ${completedIds.includes(brand.id) ? 'grayscale-0 opacity-100' : 'grayscale opacity-30 group-hover:opacity-60'}`} 
+                          className={`absolute inset-0 w-full h-full object-cover transition-all duration-700 ${completedIds.includes(brand.id) ? 'grayscale-0 opacity-100' : 'grayscale opacity-30 group-hover:opacity-60'}`} 
                           alt={brand.name} 
                         />
-                        <span className={`text-[10px] font-black uppercase tracking-[0.2em] text-center ${completedIds.includes(brand.id) ? 'text-white' : 'text-slate-600'}`}>{brand.name}</span>
-                        <div className="absolute bottom-6 flex items-center gap-1.5 text-[8px] font-black uppercase text-slate-500 tracking-widest opacity-40">
-                          <MapPin className="w-3 h-3" /> {brand.booth}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100" />
+                        
+                        <div className="absolute inset-0 p-8 flex flex-col justify-end items-center text-center gap-2">
+                          <span className={`text-[10px] font-black uppercase tracking-[0.2em] text-white drop-shadow-md`}>{brand.name}</span>
+                          <div className="flex items-center gap-1.5 text-[8px] font-black uppercase text-white/60 tracking-widest opacity-80">
+                            <MapPin className="w-3 h-3" /> {brand.booth}
+                          </div>
                         </div>
                      </motion.div>
                    ))}
@@ -649,7 +653,7 @@ const MyPass: React.FC = () => {
                           registeredActivityIds.includes(activity.id) ? 'bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100' : 'bg-black/60 opacity-100'
                         }`} />
                         
-                        <div className="absolute inset-0 p-8 flex flex-col justify-end items-center text-center gap-6">
+                        <div className="absolute inset-0 p-8 pt-16 flex flex-col justify-end items-center text-center gap-6">
                           <h4 className="text-xl font-black uppercase italic leading-tight tracking-tighter text-white drop-shadow-lg">
                             {activity.title}
                           </h4>
