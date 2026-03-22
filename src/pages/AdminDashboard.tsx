@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, BarChart3, Save, Trash2, Clock, Search, CheckSquare, Square, X, CheckCircle2,
   Activity, Target, Zap, Sparkles, Lock, Settings, PieChart, Heart, QrCode,
-  Utensils
+  Utensils, Trophy
 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useActivity } from '../lib/useActivity';
@@ -182,6 +182,16 @@ const AdminDashboard: React.FC = () => {
           };
           return { label: nameMap[id] || id, val: regCounts[id] || 0 };
         }).sort((a,b) => b.val - a.val);
+ 
+        // Global Leaderboard (Top 5)
+        const leaderboard = profiles.map(p => ({
+          name: p.name || 'Anonymous',
+          email: p.email,
+          totalPoints: (p.points || 0) + (p.points_scans || 0) + (p.points_hr_share || 0) + (p.points_profile_completion || 0),
+          type: p.profile_type
+        }))
+        .sort((a,b) => b.totalPoints - a.totalPoints)
+        .slice(0, 5);
 
         setStats({
           totalRegistrants: profiles.length,
@@ -191,6 +201,7 @@ const AdminDashboard: React.FC = () => {
           demographics: demo,
           activityCounts: regCounts,
           boothVisits,
+          leaderboard,
           categories: Object.entries(interestCounts)
             .map(([label, val]) => ({ label, val }))
             .sort((a,b) => b.val - a.val)
@@ -524,7 +535,62 @@ const AdminDashboard: React.FC = () => {
                     ))}
                   </div>
                 </div>
+              </div>
+ 
+              {/* Real-time Leaderboard */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+                <div className="bg-slate-900 rounded-[4rem] p-12 text-white shadow-2xl relative overflow-hidden col-span-1 lg:col-span-2">
+                  <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-fs-cyan/10 rounded-full blur-[100px] -z-10" />
+                  <div className="flex items-center justify-between mb-12">
+                    <div className="flex items-center gap-4">
+                      <Trophy className="w-8 h-8 text-fs-cyan" />
+                      <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white">Elite <span className="text-fs-cyan">Leaderboard.</span></h3>
+                    </div>
+                    <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-400">Real-Time Sync</span>
+                  </div>
 
+                  <div className="space-y-4">
+                    {stats.leaderboard?.map((user: any, index: number) => (
+                      <motion.div 
+                        key={user.email}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                        className="flex items-center justify-between p-6 bg-white/5 rounded-[2.5rem] border border-white/5 group hover:bg-white/10 transition-all"
+                      >
+                        <div className="flex items-center gap-6">
+                          <div className={cn(
+                            "w-12 h-12 rounded-2xl flex items-center justify-center font-black italic text-xl",
+                            index === 0 ? "bg-fs-cyan text-slate-900 shadow-lg shadow-fs-cyan/20" : "bg-white/5 text-slate-400"
+                          )}>
+                            {index + 1}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-lg font-black uppercase italic tracking-tight">{user.name}</span>
+                              <span className={cn(
+                                "text-[9px] font-black uppercase px-2 py-0.5 rounded-full",
+                                user.type === 'fitstreet' ? "bg-fs-orange/20 text-fs-orange" : "bg-brand-purple/20 text-brand-purple"
+                              )}>
+                                {user.type}
+                              </span>
+                            </div>
+                            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{user.email}</div>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-black italic text-fs-cyan tracking-tighter">{user.totalPoints}</div>
+                          <div className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Total Points</div>
+                        </div>
+                      </motion.div>
+                    ))}
+                    {(!stats.leaderboard || stats.leaderboard.length === 0) && (
+                      <div className="py-12 text-center text-slate-500 font-bold uppercase italic tracking-widest">
+                        No participant data available yet.
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             </motion.div>
           )}
