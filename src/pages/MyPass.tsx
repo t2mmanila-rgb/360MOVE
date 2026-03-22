@@ -243,8 +243,12 @@ const MyPass: React.FC = () => {
       
       // Sync to Supabase
       try {
-        const { syncProfile } = await import('../lib/supabase');
+        const { syncProfile, syncUserActivity } = await import('../lib/supabase');
         await syncProfile(updated, 'fitstreet');
+        // Record the specific booth scan as a completed activity
+        if (updated.email) {
+          await syncUserActivity(updated.email, brand.id, pointsAdded);
+        }
       } catch (err) {
         console.warn('Supabase scan sync failed:', err);
       }

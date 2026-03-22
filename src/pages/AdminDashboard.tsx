@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  BarChart3, Users, Search, 
+  BarChart3, Users, Search, QrCode,
   Activity, Target, Zap, 
   Sparkles, Lock, Settings, PieChart, 
   Save, Edit3, Trash2, Heart
@@ -74,6 +74,17 @@ const AdminDashboard: React.FC = () => {
           });
         }
 
+        // Booth Visits (Filter for booth-specific IDs)
+        const boothIds = ['pb-nike', 'pb-skippys', 'pb-chobani', 'pb-goodies', 'pb-gballers', 'pb-viking', 'pb-adidas'];
+        const boothVisits = boothIds.map(id => {
+          const nameMap: Record<string, string> = {
+            'pb-nike': 'Nike', 'pb-skippys': "Skippy's", 'pb-chobani': 'Chobani', 
+            'pb-goodies': 'Goodies', 'pb-gballers': "G'Ballers", 'pb-viking': 'Viking Fitness', 
+            'pb-adidas': 'Adidas'
+          };
+          return { label: nameMap[id] || id, val: regCounts[id] || 0 };
+        }).sort((a,b) => b.val - a.val);
+
         setStats({
           totalRegistrants: profiles.length,
           fitstreetRegistrants: fitstreet,
@@ -81,6 +92,7 @@ const AdminDashboard: React.FC = () => {
           passportCompletions,
           demographics: demo,
           activityCounts: regCounts,
+          boothVisits,
           categories: Object.entries(interestCounts)
             .map(([label, val]) => ({ label, val }))
             .sort((a,b) => b.val - a.val)
@@ -319,7 +331,7 @@ const AdminDashboard: React.FC = () => {
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Zone Participation Map */}
                 <div className="bg-slate-900 rounded-[4rem] p-12 text-white shadow-2xl relative overflow-hidden">
                   <div className="flex items-center justify-between mb-12">
@@ -350,6 +362,35 @@ const AdminDashboard: React.FC = () => {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+                {/* Passport Engagement (Granular Breakdown) */}
+                <div className="bg-white rounded-[4rem] p-12 text-slate-900 shadow-xl border border-slate-100">
+                  <div className="flex items-center justify-between mb-10">
+                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Passport Breakdown.</h3>
+                    <QrCode className="w-6 h-6 text-slate-400" />
+                  </div>
+                  <div className="space-y-6">
+                    {stats.boothVisits?.length > 0 ? stats.boothVisits.map((booth: any) => (
+                      <div key={booth.label} className="bg-slate-50 p-4 rounded-3xl border border-slate-100/50 hover:border-fs-orange/20 transition-all group">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-900 flex items-center gap-3">
+                            <div className="w-2 h-2 rounded-full bg-fs-orange group-hover:scale-125 transition-transform" />
+                            {booth.label}
+                          </span>
+                          <span className="text-xs font-black text-slate-900">{booth.val}</span>
+                        </div>
+                        <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden">
+                          <motion.div 
+                            initial={{ width: 0 }}
+                            whileInView={{ width: `${Math.min((booth.val / (stats.totalRegistrants || 1)) * 100, 100)}%` }}
+                            className="h-full bg-fs-orange rounded-full"
+                          />
+                        </div>
+                      </div>
+                    )) : (
+                      <p className="text-[10px] font-bold text-slate-400 italic py-4 text-center">No booth scans recorded yet.</p>
+                    )}
                   </div>
                 </div>
 
