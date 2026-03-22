@@ -254,8 +254,7 @@ const MyPass: React.FC = () => {
         const pointsAdded = isPaid && (userProfile?.paidActivities?.includes(brand.id)) ? 10 : 1;
 
         const updated = {
-          ...userProfile,
-          points: (userProfile?.points || 0) + pointsAdded
+          ...userProfile
         };
         setUserProfile(updated);
         localStorage.setItem('user_profile', JSON.stringify(updated));
@@ -293,6 +292,12 @@ const MyPass: React.FC = () => {
         const newScanned = [...scannedActivityIds, activity.id];
         setScannedActivityIds(newScanned);
         localStorage.setItem('scanned_activity_ids', JSON.stringify(newScanned));
+
+        const updated = {
+          ...userProfile
+        };
+        setUserProfile(updated);
+        localStorage.setItem('user_profile', JSON.stringify(updated));
       }
 
       setSuccessActivity(activity);
@@ -320,16 +325,15 @@ const MyPass: React.FC = () => {
       return total + (isPaidContent ? (hasPaid ? 10 : 0) : 1);
     }, 0);
 
-    const registrationPoints = registeredActivityIds.reduce((total, _id) => {
-      // Points should only be given once the user registers physically on site (QR scan)
-      return total + 0;
+    const scannedPoints = scannedActivityIds.reduce((total, id) => {
+      const activity = schedule.find(a => a.id === id);
+      return total + (activity?.points || 1);
     }, 0);
 
     const profilePoints = (userProfile?.profileCompleted ? 10 : 0);
     const sharePoints = userProfile?.pointsHRShare || 0;
-    const starterPoints = userProfile?.points ?? 1;
     
-    return starterPoints + passportPoints + registrationPoints + profilePoints + sharePoints;
+    return 1 + passportPoints + scannedPoints + profilePoints + sharePoints;
   };
 
   const handlePointsEarned = async (updatedProfile: any) => {
