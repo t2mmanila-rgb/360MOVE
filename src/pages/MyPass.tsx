@@ -61,6 +61,26 @@ const MyPass: React.FC = () => {
     }
   }, [location.search, brands, userProfile, navigate]);
 
+  // Sync profile from Supabase to handle multi-device / out-of-sync points
+  React.useEffect(() => {
+    const fetchLatestProfile = async () => {
+      if (!userProfile?.email) return;
+      try {
+        const { getProfile } = await import('../lib/supabase');
+        const latest = await getProfile(userProfile.email);
+        if (latest) {
+          console.log('Syncing profile from Supabase:', latest);
+          const merged = { ...userProfile, ...latest };
+          setUserProfile(merged);
+          localStorage.setItem('user_profile', JSON.stringify(merged));
+        }
+      } catch (err) {
+        console.warn('Silent sync from Supabase failed:', err);
+      }
+    };
+    fetchLatestProfile();
+  }, []);
+
   // Sync with Spreadsheet for Passport Challenge Details
   React.useEffect(() => {
     const syncBrands = async () => {

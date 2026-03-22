@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  BarChart3, Users, QrCode, TrendingUp, Search, 
+  BarChart3, Users, Search, 
   Activity, Target, Zap, 
   Sparkles, Lock, Settings, PieChart, 
   Save, Edit3, Trash2, Heart
@@ -41,13 +41,20 @@ const AdminDashboard: React.FC = () => {
         const fitstreet = profiles.filter(p => p.profile_type === 'fitstreet').length;
         const generic = profiles.filter(p => p.profile_type === 'generic').length;
         
-        // Age demographics (Mocked logic for now as we don't have birthdates, 
-        // but we could derive from other fields if present)
+        // Count Passport Completions (assuming 9 brands total, 100 pts each)
+        const passportCompletions = profiles.filter(p => (p.points_scans || 0) >= 900).length;
+
+        // Age demographics from DB
+        const ageCounts: Record<string, number> = {};
+        profiles.forEach(p => {
+          if (p.age_range) ageCounts[p.age_range] = (ageCounts[p.age_range] || 0) + 1;
+        });
+        
         const demo = [
-          { label: '18-24', val: 35, color: 'fs-cyan' },
-          { label: '25-34', val: 45, color: 'fs-orange' },
-          { label: '35-44', val: 15, color: 'brand-purple' },
-          { label: '45+', val: 5, color: 'fs-pink' }
+          { label: '18-24', val: ageCounts['18-24'] || 0, color: 'fs-cyan' },
+          { label: '25-34', val: ageCounts['25-34'] || 0, color: 'fs-orange' },
+          { label: '35-44', val: ageCounts['35-44'] || 0, color: 'brand-purple' },
+          { label: '45+', val: ageCounts['45+'] || 0, color: 'fs-pink' }
         ];
 
         // Categories/Interests
@@ -58,11 +65,22 @@ const AdminDashboard: React.FC = () => {
           });
         });
 
+        // Activity Registrations
+        const { data: activityData } = await supabase.from('user_activities').select('activity_id');
+        const regCounts: Record<string, number> = {};
+        if (activityData) {
+          activityData.forEach(reg => {
+            regCounts[reg.activity_id] = (regCounts[reg.activity_id] || 0) + 1;
+          });
+        }
+
         setStats({
           totalRegistrants: profiles.length,
           fitstreetRegistrants: fitstreet,
           genericRegistrants: generic,
+          passportCompletions,
           demographics: demo,
+          activityCounts: regCounts,
           categories: Object.entries(interestCounts)
             .map(([label, val]) => ({ label, val }))
             .sort((a,b) => b.val - a.val)
@@ -284,9 +302,9 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                 {[
                   { label: 'Total Signups', val: stats.totalRegistrants.toLocaleString(), change: 'LIVE', icon: Users, color: 'fs-cyan' },
-                  { label: 'Fitstreet Attendees', val: stats.fitstreetRegistrants.toLocaleString(), change: 'EVENT', icon: QrCode, color: 'fs-orange' },
-                  { label: '360MOVE Members', val: stats.genericRegistrants.toLocaleString(), change: 'GENERIC', icon: TrendingUp, color: 'brand-purple' },
-                  { label: 'Platform Growth', val: `${Math.round((stats.totalRegistrants / 5000) * 100)}%`, change: 'TARGET', icon: BarChart3, color: 'brand-teal' },
+                  { label: 'Fitstreet Attendees', val: stats.fitstreetRegistrants.toLocaleString(), change: 'EVENT', icon: Zap, color: 'fs-orange' },
+                  { label: '360MOVE Members', val: stats.genericRegistrants.toLocaleString(), change: 'GENERIC', icon: PieChart, color: 'brand-purple' },
+                  { label: 'Passport Completions', val: stats.passportCompletions?.toLocaleString() || '0', change: 'ALIVE', icon: Target, color: 'fs-pink' }
                 ].map((stat) => (
                   <div key={stat.label} className="bg-white p-8 rounded-[3rem] border border-slate-100 shadow-sm">
                     <div className="flex items-center justify-between mb-6">
@@ -448,7 +466,14 @@ const AdminDashboard: React.FC = () => {
                         <img src={act.image} alt="" className="w-full h-full object-cover" />
                       </div>
                       <div className="truncate">
-                        <div className="text-xs font-black text-slate-900 truncate leading-tight uppercase italic">{act.title}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs font-black text-slate-900 truncate leading-tight uppercase italic">{act.title}</div>
+                          {stats.activityCounts?.[act.id] > 0 && (
+                            <span className="bg-slate-900 text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0">
+                              {stats.activityCounts[act.id]}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[9px] font-bold text-slate-400 group-hover:text-slate-500">{act.category}</div>
                       </div>
                     </button>
@@ -468,7 +493,14 @@ const AdminDashboard: React.FC = () => {
                         <img src={prog.image} alt="" className="w-full h-full object-cover" />
                       </div>
                       <div className="truncate">
-                        <div className="text-xs font-black text-slate-900 truncate leading-tight uppercase italic">{prog.title}</div>
+                        <div className="flex items-center gap-2">
+                          <div className="text-xs font-black text-slate-900 truncate leading-tight uppercase italic">{prog.title}</div>
+                          {stats.activityCounts?.[prog.id] > 0 && (
+                            <span className="bg-brand-purple text-white text-[7px] font-black px-1.5 py-0.5 rounded-full shrink-0">
+                              {stats.activityCounts[prog.id]}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[9px] font-bold text-slate-400 group-hover:text-slate-500">{prog.category}</div>
                       </div>
                     </button>

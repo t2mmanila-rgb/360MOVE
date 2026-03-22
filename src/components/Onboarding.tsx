@@ -41,14 +41,22 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
   const nextStep = () => setStep(s => s + 1);
 
   const handleFinalize = async () => {
+    // Clear existing local activity/passport state to prevent leakage between test users
+    localStorage.removeItem('registered_activity_ids');
+    localStorage.removeItem('completed_ids');
+
     const savedProfile = localStorage.getItem('user_profile');
     const profile = savedProfile ? JSON.parse(savedProfile) : {};
+    
+    // Award 10 points bonus as a starter for Fitstreet
+    const starterPoints = 60; // 50 base + 10 bonus
+    
     const updatedProfile = { 
       ...profile, 
       ...formData, 
       personalized: true,
-      points: (profile.points || 0) + 1, // Base point for onboarding
-      pointsOnboarding: 1,
+      points: starterPoints,
+      pointsOnboarding: 10,
       signupDate: formData.signupDate || new Date().toISOString()
     };
     
@@ -213,17 +221,6 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
                 </select>
                 <select 
                   className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer"
-                  value={formData.city}
-                  onChange={e => setFormData({...formData, city: e.target.value})}
-                >
-                  <option value="" className="bg-slate-900">Primary City</option>
-                  <option value="Taguig" className="bg-slate-900">Taguig (BGC)</option>
-                  <option value="Makati" className="bg-slate-900">Makati</option>
-                  <option value="Pasig" className="bg-slate-900">Pasig</option>
-                  <option value="Other" className="bg-slate-900">Other</option>
-                </select>
-                <select 
-                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer col-span-2"
                   value={formData.gender}
                   onChange={e => setFormData({...formData, gender: e.target.value})}
                 >
@@ -231,7 +228,39 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
                   <option value="Male" className="bg-slate-900">Male</option>
                   <option value="Female" className="bg-slate-900">Female</option>
                   <option value="Non-binary" className="bg-slate-900">Non-binary</option>
-                  <option value="Prefer not to say" className="bg-slate-900">Prefer not to say</option>
+                </select>
+                <select 
+                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer"
+                  value={(formData as any).fitnessLevel || ''}
+                  onChange={e => setFormData({...formData, fitnessLevel: e.target.value} as any)}
+                >
+                  <option value="" className="bg-slate-900">Fitness Level</option>
+                  <option value="Beginner" className="bg-slate-900">Beginner</option>
+                  <option value="Intermediate" className="bg-slate-900">Intermediate</option>
+                  <option value="Advanced" className="bg-slate-900">Advanced / Athlete</option>
+                </select>
+                <select 
+                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer"
+                  value={(formData as any).workoutFrequency || ''}
+                  onChange={e => setFormData({...formData, workoutFrequency: e.target.value} as any)}
+                >
+                  <option value="" className="bg-slate-900">Workouts/Week</option>
+                  <option value="0-1" className="bg-slate-900">0-1 times</option>
+                  <option value="2-3" className="bg-slate-900">2-3 times</option>
+                  <option value="4-5" className="bg-slate-900">4-5 times</option>
+                  <option value="Daily" className="bg-slate-900">Daily</option>
+                </select>
+                <select 
+                  className="bg-white/5 border border-white/10 rounded-2xl px-6 py-5 text-[10px] font-black uppercase tracking-widest text-slate-400 outline-none focus:border-fs-cyan transition-all appearance-none cursor-pointer col-span-2"
+                  value={(formData as any).trainingGoal || ''}
+                  onChange={e => setFormData({...formData, trainingGoal: e.target.value} as any)}
+                >
+                  <option value="" className="bg-slate-900">Main Training Goal</option>
+                  <option value="Weight Loss" className="bg-slate-900">Weight Loss & Shred</option>
+                  <option value="Muscle Gain" className="bg-slate-900">Muscle & Strength</option>
+                  <option value="Endurance" className="bg-slate-900">Endurance & Cardio</option>
+                  <option value="Flexibility" className="bg-slate-900">Flexibility & Recovery</option>
+                  <option value="General Health" className="bg-slate-900">General Longevity</option>
                 </select>
               </div>
 

@@ -22,12 +22,33 @@ const GenericDashboard: React.FC = () => {
     } else {
       // If not logged in, redirect to register
       navigate('/register');
+      return;
     }
 
     const savedRegistered = localStorage.getItem('registered_generic_activities');
     if (savedRegistered) {
       setRegisteredPrograms(JSON.parse(savedRegistered));
     }
+
+    const fetchLatestProfile = async () => {
+      const saved = localStorage.getItem('generic_user_profile');
+      if (!saved) return;
+      try {
+        const parsed = JSON.parse(saved);
+        if (parsed.email) {
+          const { getProfile } = await import('../lib/supabase');
+          const latest = await getProfile(parsed.email);
+          if (latest) {
+            const merged = { ...parsed, ...latest };
+            setGenericUser(merged);
+            localStorage.setItem('generic_user_profile', JSON.stringify(merged));
+          }
+        }
+      } catch (err) {
+        console.warn('Silent sync from Supabase failed:', err);
+      }
+    };
+    fetchLatestProfile();
   }, [navigate]);
 
   const handleRegisterProgram = async (id: string, e?: React.MouseEvent) => {

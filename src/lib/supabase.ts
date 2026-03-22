@@ -27,7 +27,14 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
         work_setup: profile.work_setup,
         categories: profile.categories,
         city: profile.city,
+        age_range: profile.ageRange || profile.age_range,
+        gender: profile.gender,
+        fitness_level: profile.fitnessLevel || profile.fitness_level,
+        workout_frequency: profile.workoutFrequency || profile.workout_frequency,
+        training_goal: profile.trainingGoal || profile.training_goal,
         profile_type: type,
+        points: profile.points, // Use the points from the profile object
+        profile_completed: !!profile.profileCompleted,
         updated_at: new Date().toISOString()
       }, { onConflict: 'email' })
       .select()

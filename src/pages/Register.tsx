@@ -46,6 +46,11 @@ const Register: React.FC = () => {
       personalized: true // Mark as personalized since we are skipping the onboarding/interest steps for now
     };
     
+    // Clear existing local state to prevent leakage between test users
+    localStorage.removeItem('generic_user_profile');
+    localStorage.removeItem('is_generic_logged_in');
+    localStorage.removeItem('user_profile'); // Also clear Fitstreet if any
+    
     // Sync to Supabase
     try {
       const { syncProfile } = await import('../lib/supabase');
