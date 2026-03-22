@@ -39,7 +39,8 @@ export const useActivity = () => {
             isPaid: row.is_paid,
             location: row.location,
             description: row.description,
-            extendedDescription: row.extended_description
+            extendedDescription: row.extended_description,
+            mechanics: row.mechanics
           };
         });
         applyOverrides(overrides);

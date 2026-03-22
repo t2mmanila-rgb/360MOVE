@@ -275,6 +275,7 @@ const AdminDashboard: React.FC = () => {
         location: current.location,
         description: current.description,
         extended_description: current.extendedDescription,
+        mechanics: current.mechanics,
         updated_at: new Date().toISOString()
       });
     } catch (err) {
@@ -775,6 +776,16 @@ const AdminDashboard: React.FC = () => {
                         className="w-full px-8 py-6 bg-slate-50 rounded-[2rem] text-sm font-medium leading-relaxed outline-none focus:ring-2 focus:ring-fs-cyan/20 border-transparent transition-all resize-none"
                       />
                     </div>
+                    
+                    <div className="mt-10 space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Challenge Mechanics</label>
+                      <textarea 
+                        rows={6}
+                        value={overrides[editingActivity.id]?.mechanics ?? (editingActivity as any).mechanics ?? ''}
+                        onChange={(e) => saveOverride(editingActivity.id, 'mechanics', e.target.value)}
+                        className="w-full px-8 py-6 bg-slate-50 rounded-[2rem] text-sm font-medium leading-relaxed outline-none focus:ring-2 focus:ring-fs-cyan/20 border-transparent transition-all resize-none"
+                      />
+                    </div>
 
                     {/* Attendees List Section */}
                     <div className="mt-16 space-y-8">
@@ -883,7 +894,15 @@ const AdminDashboard: React.FC = () => {
                         </div>
                         <p className="text-xs font-black text-slate-900 uppercase italic">Changes are instantly published to live browsers.</p>
                       </div>
-                      <button className="pill-button bg-slate-900 text-white px-10">Done Editing</button>
+                      <button 
+                        onClick={() => {
+                          setEditingActivity(null);
+                          window.scrollTo({ top: 0, behavior: 'smooth' });
+                        }}
+                        className="pill-button bg-slate-900 text-white px-10 hover:bg-slate-800 transition-colors"
+                      >
+                        Done Editing
+                      </button>
                     </div>
                   </motion.div>
                 </div>

@@ -28,6 +28,7 @@ const ActivityDetail: React.FC = () => {
         instructor: found.instructor || 'Lead Performance Coach',
         description: found.description,
         extendedDescription: found.extendedDescription,
+        mechanics: (found as any).mechanics,
         image: found.image || '/activities/rope_flow_premium.png',
         isPaid: found.isPaid ?? false
       };
@@ -41,8 +42,9 @@ const ActivityDetail: React.FC = () => {
       duration: '60 min',
       location: 'BGC Amphitheater',
       instructor: 'Coach Fai',
-      description: 'Experience a transformative journey that combines physical movement with mindfulness.',
+      description: 'Experience a transformative journey.',
       extendedDescription: '',
+      mechanics: '',
       image: '/activities/rope_flow_premium.png',
       isPaid: false
     };
@@ -107,8 +109,21 @@ const ActivityDetail: React.FC = () => {
               </div>
 
               {activity.extendedDescription && (
-                <div className="prose prose-lg prose-slate max-w-none mb-20 text-slate-600 font-semibold leading-relaxed border-l-4 border-brand-purple/20 pl-8 py-2">
+                <div className="prose prose-lg prose-slate max-w-none mb-10 text-slate-600 font-semibold leading-relaxed border-l-4 border-brand-purple/20 pl-8 py-2">
                   {activity.extendedDescription}
+                </div>
+              )}
+
+              {activity.mechanics && (
+                <div className="bg-slate-900 rounded-[3rem] p-12 mb-20 relative overflow-hidden group">
+                  <div className="absolute top-0 right-0 w-64 h-64 bg-brand-turquoise/10 rounded-full blur-[80px] -z-10 group-hover:bg-brand-turquoise/20 transition-all" />
+                  <div className="flex items-center gap-4 mb-6">
+                    <Zap className="w-6 h-6 text-brand-turquoise fill-brand-turquoise" />
+                    <h3 className="text-2xl font-black italic uppercase tracking-tighter text-white">Challenge Mechanics.</h3>
+                  </div>
+                  <div className="text-brand-turquoise/80 font-medium leading-relaxed italic text-lg">
+                    {activity.mechanics}
+                  </div>
                 </div>
               )}
 
