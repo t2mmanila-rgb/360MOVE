@@ -8,6 +8,7 @@ import {
 import { supabase } from '../lib/supabase';
 import { useActivity } from '../lib/useActivity';
 import { cn } from '../lib/utils';
+import { MOCK_SCHEDULE, B2C_PROGRAMS, B2B_PASSPORT_BRANDS } from '../data/activities';
 
 type Tab = 'fitstreet' | '360move' | 'editor';
 
@@ -23,8 +24,11 @@ const AdminDashboard: React.FC = () => {
     fitstreetRegistrants: 0,
     genericRegistrants: 0,
     demographics: [],
+    genderStats: [],
+    zoneStats: [],
     categories: []
   });
+  const [leaderboardType, setLeaderboardType] = useState<'all' | 'fitstreet' | 'generic'>('all');
   const [attendees, setAttendees] = useState<any[]>([]);
   const [isAttendeesLoading, setIsAttendeesLoading] = useState(false);
 
@@ -142,8 +146,11 @@ const AdminDashboard: React.FC = () => {
         const ageCounts: Record<string, number> = {};
         let totalWithAge = 0;
         profiles.forEach(p => {
-          if (p.age_range) {
-            ageCounts[p.age_range] = (ageCounts[p.age_range] || 0) + 1;
+          const ageValue = p.age_range || p.ageRange;
+          if (ageValue) {
+            // Normalize "18 - 24" to "18-24" for consistent counting
+            const range = ageValue.trim().replace(/\s/g, '');
+            ageCounts[range] = (ageCounts[range] || 0) + 1;
             totalWithAge++;
           }
         });
@@ -154,6 +161,11 @@ const AdminDashboard: React.FC = () => {
           { label: '35-44', val: totalWithAge > 0 ? (ageCounts['35-44'] || 0) / totalWithAge * 100 : 0, count: ageCounts['35-44'] || 0, color: 'brand-purple' },
           { label: '45+', val: totalWithAge > 0 ? (ageCounts['45+'] || 0) / totalWithAge * 100 : 0, count: ageCounts['45+'] || 0, color: 'fs-pink' }
         ];
+        
+        // Debug log for demographics if they are 0
+        if (totalWithAge === 0 && profiles.length > 0) {
+          console.warn('Demographics are 0 but profiles exist. Sample profile age_range:', profiles[0].age_range);
+        }
 
         // Categories/Interests
         const interestCounts: Record<string, number> = {};
@@ -183,15 +195,50 @@ const AdminDashboard: React.FC = () => {
           return { label: nameMap[id] || id, val: regCounts[id] || 0 };
         }).sort((a,b) => b.val - a.val);
  
-        // Global Leaderboard (Top 5)
-        const leaderboard = profiles.map(p => ({
+        // Global Leaderboard (Top 10 for better filtering)
+        const fullLeaderboard = profiles.map(p => ({
           name: p.name || 'Anonymous',
           email: p.email,
           totalPoints: (p.points || 0) + (p.points_scans || 0) + (p.points_hr_share || 0) + (p.points_profile_completion || 0),
           type: p.profile_type
         }))
-        .sort((a,b) => b.totalPoints - a.totalPoints)
-        .slice(0, 5);
+        .sort((a,b) => b.totalPoints - a.totalPoints);
+
+        // Gender Distribution
+        const genderCounts: Record<string, number> = {};
+        profiles.forEach(p => {
+          if (p.gender) genderCounts[p.gender] = (genderCounts[p.gender] || 0) + 1;
+        });
+        const totalWithGender = Object.values(genderCounts).reduce((a, b) => a + b, 0);
+        const genderStats = [
+          { label: 'Male', val: totalWithGender > 0 ? (genderCounts['Male'] || 0) / totalWithGender * 100 : 0, color: '#00F5FF' },
+          { label: 'Female', val: totalWithGender > 0 ? (genderCounts['Female'] || 0) / totalWithGender * 100 : 0, color: '#FF007A' },
+          { label: 'Non-binary', val: totalWithGender > 0 ? (genderCounts['Non-binary'] || 0) / totalWithGender * 100 : 0, color: '#7000FF' }
+        ];
+
+        // Zone Activity Calculation
+        const allActivations = [...(MOCK_SCHEDULE || []), ...(B2C_PROGRAMS || []), ...(B2B_PASSPORT_BRANDS || [])];
+        const zoneLookup: Record<string, string> = {};
+        allActivations.forEach(a => { if (a.id && a.zone) zoneLookup[a.id] = a.zone; });
+        
+        const zoneRegs: Record<string, number> = { 'THE ARENA': 0, 'EAT': 0, 'PLAY': 0, 'HEAL': 0, 'GLOW': 0 };
+        if (activityData) {
+          activityData.forEach(reg => {
+            const z = zoneLookup[reg.activity_id];
+            if (z) {
+              const zoneKey = z === 'EAT ZONE' ? 'EAT' : z === 'PLAY ZONE' ? 'PLAY' : z === 'HEAL ZONE' ? 'HEAL' : z === 'GLOW ZONE' ? 'GLOW' : z;
+              if (zoneRegs[zoneKey] !== undefined) zoneRegs[zoneKey]++;
+            }
+          });
+        }
+        const totalZoneRegs = Object.values(zoneRegs).reduce((a, b) => a + b, 0);
+        const zoneStats = [
+          { label: 'The ARENA', pct: totalZoneRegs > 0 ? Math.round((zoneRegs['THE ARENA'] / totalZoneRegs) * 100) : 0, color: 'fs-orange', icon: Zap },
+          { label: 'EAT Zone', pct: totalZoneRegs > 0 ? Math.round((zoneRegs['EAT'] / totalZoneRegs) * 100) : 0, color: 'fs-cyan', icon: Utensils },
+          { label: 'PLAY Zone', pct: totalZoneRegs > 0 ? Math.round((zoneRegs['PLAY'] / totalZoneRegs) * 100) : 0, color: 'fs-pink', icon: Target },
+          { label: 'HEAL Zone', pct: totalZoneRegs > 0 ? Math.round((zoneRegs['HEAL'] / totalZoneRegs) * 100) : 0, color: 'fs-lime', icon: Heart },
+          { label: 'GLOW Zone', pct: totalZoneRegs > 0 ? Math.round((zoneRegs['GLOW'] / totalZoneRegs) * 100) : 0, color: 'brand-purple', icon: Sparkles }
+        ];
 
         setStats({
           totalRegistrants: profiles.length,
@@ -199,13 +246,15 @@ const AdminDashboard: React.FC = () => {
           genericRegistrants: generic,
           passportCompletions,
           demographics: demo,
+          genderStats,
+          zoneStats,
           activityCounts: regCounts,
           boothVisits,
-          leaderboard,
+          leaderboard: fullLeaderboard,
           categories: Object.entries(interestCounts)
             .map(([label, val]) => ({ label, val }))
             .sort((a,b) => b.val - a.val)
-            .slice(0, 4)
+            .slice(0, 10) // Show more for filtering
         });
       }
     } catch (err) {
@@ -451,18 +500,22 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Zone Participation Map */}
                 <div className="bg-slate-900 rounded-[4rem] p-12 text-white shadow-2xl relative overflow-hidden">
-                  <div className="flex items-center justify-between mb-12">
+                  <div className="flex items-center justify-between mb-2">
                     <h3 className="text-3xl font-black italic uppercase tracking-tighter text-fs-orange">Zone Activity.</h3>
                     <PieChart className="w-6 h-6 text-fs-orange" />
                   </div>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-8 flex items-center gap-2">
+                    <Clock className="w-3 h-3" />
+                    Participation Share (Real-Time)
+                  </p>
                   <div className="space-y-8">
-                    {[
-                      { label: 'The ARENA', pct: 85, color: 'fs-orange', icon: Zap },
-                      { label: 'EAT Zone', pct: 64, color: 'fs-cyan', icon: Utensils },
-                      { label: 'PLAY Zone', pct: 52, color: 'fs-pink', icon: Target },
-                      { label: 'HEAL Zone', pct: 38, color: 'fs-lime', icon: Heart },
-                      { label: 'GLOW Zone', pct: 25, color: 'brand-purple', icon: Sparkles }
-                    ].map((zone) => (
+                    {(stats.zoneStats && stats.zoneStats.length > 0 ? stats.zoneStats : [
+                      { label: 'The ARENA', pct: 0, color: 'fs-orange', icon: Zap },
+                      { label: 'EAT Zone', pct: 0, color: 'fs-cyan', icon: Utensils },
+                      { label: 'PLAY Zone', pct: 0, color: 'fs-pink', icon: Target },
+                      { label: 'HEAL Zone', pct: 0, color: 'fs-lime', icon: Heart },
+                      { label: 'GLOW Zone', pct: 0, color: 'brand-purple', icon: Sparkles }
+                    ]).map((zone: any) => (
                       <div key={zone.label} className="group">
                         <div className="flex items-center justify-between mb-3 text-[10px] font-black uppercase tracking-widest">
                           <span className="text-slate-400 flex items-center gap-3">
@@ -474,7 +527,7 @@ const AdminDashboard: React.FC = () => {
                         <div className="w-full bg-white/5 h-2.5 rounded-full overflow-hidden">
                           <motion.div 
                             initial={{ width: 0 }}
-                            whileInView={{ width: `${zone.pct}%` }}
+                            animate={{ width: `${zone.pct}%` }}
                             className={cn("h-full rounded-full", `bg-${zone.color}`)}
                           />
                         </div>
@@ -511,28 +564,70 @@ const AdminDashboard: React.FC = () => {
                     )}
                   </div>
                 </div>
-
-                {/* Demographics Chart */}
-                <div className="bg-white rounded-[4rem] p-12 text-slate-900 shadow-xl border border-slate-100">
-                  <div className="flex items-center justify-between mb-12">
-                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Demographics.</h3>
-                    <BarChart3 className="w-6 h-6 text-slate-400" />
-                  </div>
-                  <div className="flex items-end justify-between h-64 gap-4 px-4">
-                    {stats.demographics.map((bar: any) => (
-                      <div key={bar.label} className="flex-1 flex flex-col items-center gap-4">
-                        <motion.div 
-                          initial={{ height: 0 }}
-                          whileInView={{ height: `${bar.val}%` }}
-                          className={cn("w-full rounded-2xl relative group cursor-pointer", `bg-${bar.color} scroll-shadow`)}
-                        >
-                          <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
-                            {bar.count} Users ({Math.round(bar.val)}%)
+                {/* Demographics & Gender Grid */}
+                <div className="lg:col-span-1 space-y-8">
+                  {/* Age Demographics */}
+                  <div className="bg-white rounded-[4rem] p-12 text-slate-900 shadow-xl border border-slate-100">
+                    <div className="flex items-center justify-between mb-12">
+                      <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Demographics.</h3>
+                      <BarChart3 className="w-6 h-6 text-slate-400" />
+                    </div>
+                    <div className="flex items-end justify-between h-48 gap-4 px-4">
+                      {stats.demographics.map((bar: any) => (
+                        <div key={bar.label} className="flex-1 flex flex-col items-center gap-4">
+                          <div className="w-full h-full bg-slate-50 rounded-2xl relative overflow-hidden flex flex-col justify-end">
+                            <motion.div 
+                              initial={{ height: 0 }}
+                              animate={{ height: `${bar.val}%` }}
+                              className={cn("w-full rounded-2xl relative group cursor-pointer", `bg-${bar.color}`)}
+                            >
+                              <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-20">
+                                {bar.count} Users ({Math.round(bar.val)}%)
+                              </div>
+                            </motion.div>
                           </div>
-                        </motion.div>
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{bar.label}</span>
+                          <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{bar.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Gender Distribution */}
+                  <div className="bg-slate-900 rounded-[4rem] p-12 text-white shadow-2xl relative overflow-hidden">
+                    <div className="flex items-center justify-between mb-10">
+                      <h3 className="text-3xl font-black italic uppercase tracking-tighter text-fs-cyan">Gender.</h3>
+                      <PieChart className="w-6 h-6 text-fs-cyan" />
+                    </div>
+                    
+                    <div className="flex items-center gap-12">
+                      <div className="relative w-40 h-40 shrink-0">
+                        <div 
+                          className="w-full h-full rounded-full"
+                          style={{
+                            background: `conic-gradient(
+                              #00F5FF 0% ${stats.genderStats[0]?.val || 0}%, 
+                              #FF007A ${stats.genderStats[0]?.val || 0}% ${(stats.genderStats[0]?.val || 0) + (stats.genderStats[1]?.val || 0)}%, 
+                              #7000FF ${(stats.genderStats[0]?.val || 0) + (stats.genderStats[1]?.val || 0)}% 100%
+                            )`
+                          }}
+                        />
+                        <div className="absolute inset-4 bg-slate-900 rounded-full flex items-center justify-center">
+                          <Users className="w-8 h-8 text-white/20" />
+                        </div>
                       </div>
-                    ))}
+
+                      <div className="flex-1 space-y-4">
+                        {stats.genderStats.map((gender: any) => (
+                          <div key={gender.label} className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: gender.color }} />
+                              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">{gender.label}</span>
+                            </div>
+                            <span className="text-xs font-black">{Math.round(gender.val)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -541,16 +636,39 @@ const AdminDashboard: React.FC = () => {
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
                 <div className="bg-slate-900 rounded-[4rem] p-12 text-white shadow-2xl relative overflow-hidden col-span-1 lg:col-span-2">
                   <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-fs-cyan/10 rounded-full blur-[100px] -z-10" />
-                  <div className="flex items-center justify-between mb-12">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
                     <div className="flex items-center gap-4">
                       <Trophy className="w-8 h-8 text-fs-cyan" />
                       <h3 className="text-3xl font-black italic uppercase tracking-tighter text-white">Elite <span className="text-fs-cyan">Leaderboard.</span></h3>
                     </div>
-                    <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-400">Real-Time Sync</span>
+                    <div className="flex items-center gap-4">
+                      <div className="flex bg-white/5 p-1 rounded-2xl border border-white/10">
+                        {[
+                          { id: 'all', label: 'All' },
+                          { id: 'fitstreet', label: 'Fitstreet' },
+                          { id: 'generic', label: '360MOVE' }
+                        ].map(type => (
+                          <button
+                            key={type.id}
+                            onClick={() => setLeaderboardType(type.id as any)}
+                            className={cn(
+                              "px-6 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all",
+                              leaderboardType === type.id ? "bg-fs-cyan text-slate-900 shadow-lg" : "text-slate-400 hover:text-white"
+                            )}
+                          >
+                            {type.label}
+                          </button>
+                        ))}
+                      </div>
+                      <span className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-black uppercase tracking-widest text-slate-400">Real-Time Sync</span>
+                    </div>
                   </div>
 
                   <div className="space-y-4">
-                    {stats.leaderboard?.map((user: any, index: number) => (
+                    {stats.leaderboard
+                      ?.filter((user: any) => leaderboardType === 'all' || user.type === leaderboardType)
+                      .slice(0, 10)
+                      .map((user: any, index: number) => (
                       <motion.div 
                         key={user.email}
                         initial={{ opacity: 0, x: -20 }}
