@@ -71,7 +71,7 @@ const MyPass: React.FC = () => {
       if (!userProfile?.email) return;
       try {
         const { getProfile, migrateLocalData } = await import('../lib/supabase');
-        const latest = await getProfile(userProfile.email);
+        const latest = await getProfile(userProfile?.email);
         if (latest) {
           const merged = { ...userProfile, ...latest };
           setUserProfile(merged);
@@ -135,7 +135,7 @@ const MyPass: React.FC = () => {
       if (userProfile?.email) {
         try {
           const { syncUserActivity } = await import('../lib/supabase');
-          await syncUserActivity(userProfile.email, id, activity.points, userProfile);
+          await syncUserActivity(userProfile?.email, id, activity.points, userProfile);
         } catch (err) {
           console.warn('Supabase registration sync failed:', err);
         }
@@ -167,7 +167,7 @@ const MyPass: React.FC = () => {
     if (userProfile?.email) {
       try {
         const { deleteUserActivity } = await import('../lib/supabase');
-        await deleteUserActivity(userProfile.email, id);
+        await deleteUserActivity(userProfile?.email, id);
       } catch (err) {
         console.warn('Supabase cancellation sync failed:', err);
       }
@@ -211,8 +211,8 @@ const MyPass: React.FC = () => {
 
       const updated = {
         ...userProfile,
-        pointsScans: (userProfile.pointsScans || 0) + 1,
-        points: (userProfile.points || 0) + pointsAdded
+        pointsScans: (userProfile?.pointsScans || 0) + 1,
+        points: (userProfile?.points || 0) + pointsAdded
       };
       setUserProfile(updated);
       localStorage.setItem('user_profile', JSON.stringify(updated));
@@ -375,6 +375,7 @@ const MyPass: React.FC = () => {
                />
               <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-transparent to-transparent" />
             </div>
+
             <div className="p-8">
               <div className="flex items-center gap-2 mb-4">
                 <span className="px-3 py-1 rounded-full bg-fs-cyan/20 text-fs-cyan text-[10px] font-black uppercase tracking-widest leading-none">
@@ -385,69 +386,45 @@ const MyPass: React.FC = () => {
                 </span>
               </div>
 
-              {registeredActivityIds.includes(selectedItem.id) && (
-                <div className="flex flex-col gap-2 mb-6 p-4 rounded-xl bg-fs-cyan/10 border border-fs-cyan/20">
-                  <div className="flex items-center gap-2 text-fs-cyan text-[10px] font-black uppercase tracking-widest leading-none mb-1">
-                    <CheckCircle2 className="w-4 h-4" /> Activated in Passport
-                  </div>
+              <div className="flex flex-col gap-2 mb-8 p-6 rounded-2xl bg-white/5 border border-white/5">
+                <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                  <Calendar className="w-4 h-4 text-fs-cyan" /> {(selectedItem as any).day || 'Fitstreet 2026'}
                 </div>
-              )}
-
-              <div className="flex flex-col gap-2 mb-6 p-4 rounded-xl bg-white/5 border border-white/5">
-                {(selectedItem as Activity).day && (
-                  <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                    <Calendar className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).day}
-                  </div>
-                )}
-                {((selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)) && (
-                  <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                    <Clock className="w-3.5 h-3.5 text-slate-400" /> {(selectedItem as Activity).time || ('duration' in selectedItem && selectedItem.duration)}
-                  </div>
-                )}
-                {((selectedItem as Activity).location || (selectedItem as PassportBrand).booth) && (
-                  <div className="flex items-center gap-2 text-slate-300 text-[10px] font-black uppercase tracking-widest">
-                    <MapPin className="w-3.5 h-3.5 text-fs-orange" /> {(selectedItem as Activity).location || (selectedItem as PassportBrand).booth}
-                  </div>
-                )}
+                <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                  <Clock className="w-4 h-4 text-fs-pink" /> {(selectedItem as any).time || ('duration' in selectedItem ? selectedItem.duration : 'All Day')}
+                </div>
+                <div className="flex items-center gap-3 text-slate-300 text-[10px] font-black uppercase tracking-widest">
+                  <MapPin className="w-4 h-4 text-fs-orange" /> {(selectedItem as any).location || ('booth' in selectedItem ? selectedItem.booth : 'BGC Amphitheater')}
+                </div>
               </div>
-              <h3 className="text-3xl font-black italic mb-6 tracking-tight uppercase leading-tight">
+
+              <h3 className="text-3xl font-black italic mb-8 tracking-tight uppercase leading-tight text-white">
                 {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
               </h3>
-                            <div className="flex flex-wrap gap-3 mb-8">
-                  <div className="px-4 py-1.5 rounded-full bg-fs-cyan/10 border border-fs-cyan/20 text-fs-cyan text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
-                    <Calendar className="w-3 h-3" /> {(selectedItem as any).day || 'Fitstreet 2026'}
-                  </div>
-                  <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
-                    <Clock className="w-3 h-3" /> {(selectedItem as any).time || 'All Day'}
-                  </div>
-                  <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
-                    <MapPin className="w-3 h-3" /> {(selectedItem as any).location || 'BGC Amphitheater'}
-                  </div>
-                </div>
 
-                <div className="mb-8">
-                <h3 className="text-white font-black text-2xl uppercase italic tracking-tighter mb-4 flex items-center gap-3">
+              <div className="mb-8">
+                <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter mb-4 flex items-center gap-3">
                   <span className="w-1.5 h-6 bg-fs-cyan rounded-full" />
-                  About {(selectedItem as any).title || (selectedItem as any).name}.
-                </h3>
+                  About {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
+                </h4>
                 <div className="space-y-6">
                   <p className="text-slate-400 text-sm leading-relaxed italic">
                     "{(selectedItem as any).description}"
                   </p>
                   
                   {(selectedItem as any).extendedDescription && (
-                    <p className={`text-slate-200 text-sm leading-relaxed font-medium bg-white/5 p-6 rounded-2xl border border-white/5 ${!isExpanded ? 'line-clamp-4' : ''}`}>
+                    <div className={`text-slate-200 text-sm leading-relaxed font-medium bg-white/5 p-6 rounded-2xl border border-white/5 ${!isExpanded ? 'line-clamp-4' : ''}`}>
                       {(selectedItem as any).extendedDescription}
-                    </p>
+                    </div>
                   )}
                 </div>
               </div>
               
               {(selectedItem as any).mechanics && (
                 <div className="bg-fs-cyan/5 rounded-[2rem] p-8 mb-8 border border-fs-cyan/20">
-                  <h3 className="text-fs-cyan font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <h4 className="text-fs-cyan font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
                     <Zap className="w-4 h-4 fill-fs-cyan" /> Challenge Mechanics
-                  </h3>
+                  </h4>
                   <p className={`text-white text-sm font-medium leading-relaxed italic ${!isExpanded ? 'line-clamp-3' : ''}`}>
                     {(selectedItem as any).mechanics}
                   </p>
@@ -870,18 +847,18 @@ const MyPass: React.FC = () => {
 
               <div className="space-y-4">
                 {[
-                  { label: "Email", value: userProfile.email || userProfile.name?.toLowerCase().replace(' ', '.') + '@gmail.com' },
-                  { label: "Mobile", value: userProfile.mobile || '09XX XXX XXXX' },
-                  { label: "Work Setup", value: userProfile.workSetup },
-                  { label: "Company", value: userProfile.companyName },
-                  { label: "Occupation", value: userProfile.occupation },
-                  { label: "Income Bracket", value: userProfile.incomeBracket },
-                  { label: "Fitness Level", value: userProfile.fitnessLevel },
-                  { label: "Years Active", value: userProfile.yearsActive },
-                  { label: "Training Goal", value: userProfile.trainingGoal },
-                  { label: "Workout Frequency", value: userProfile.workoutFrequency },
-                  { label: "Preferred Time", value: userProfile.preferredTime },
-                  { label: "Diet Type", value: userProfile.dietType },
+                  { label: "Email", value: userProfile?.email || userProfile?.name?.toLowerCase().replace(' ', '.') + '@gmail.com' },
+                  { label: "Mobile", value: userProfile?.mobile || '09XX XXX XXXX' },
+                  { label: "Work Setup", value: userProfile?.workSetup },
+                  { label: "Company", value: userProfile?.companyName },
+                  { label: "Occupation", value: userProfile?.occupation },
+                  { label: "Income Bracket", value: userProfile?.incomeBracket },
+                  { label: "Fitness Level", value: userProfile?.fitnessLevel },
+                  { label: "Years Active", value: userProfile?.yearsActive },
+                  { label: "Training Goal", value: userProfile?.trainingGoal },
+                  { label: "Workout Frequency", value: userProfile?.workoutFrequency },
+                  { label: "Preferred Time", value: userProfile?.preferredTime },
+                  { label: "Diet Type", value: userProfile?.dietType },
                 ].map((item, i) => (
                   <div key={i} className="flex justify-between items-center py-4 border-b border-white/5">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>

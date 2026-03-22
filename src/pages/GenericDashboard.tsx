@@ -63,7 +63,7 @@ const GenericDashboard: React.FC = () => {
       try {
         const { syncUserActivity } = await import('../lib/supabase');
         const activity = B2CConfig.find(p => p.id === id || p.title === id);
-        await syncUserActivity(genericUser.email, id, activity?.points || 10);
+        await syncUserActivity(genericUser?.email, id, activity?.points || 10);
       } catch (err) {
         console.warn('Supabase registration sync failed:', err);
       }
@@ -79,7 +79,7 @@ const GenericDashboard: React.FC = () => {
     if (genericUser?.email) {
       try {
         const { deleteUserActivity } = await import('../lib/supabase');
-        await deleteUserActivity(genericUser.email, id);
+        await deleteUserActivity(genericUser?.email, id);
       } catch (err) {
         console.warn('Supabase cancellation sync failed:', err);
       }
