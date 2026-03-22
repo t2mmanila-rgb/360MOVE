@@ -76,7 +76,7 @@ const Navbar: React.FC = () => {
               alt="360MOVE" 
               className="h-12 md:h-16 w-auto transition-transform group-hover:scale-105" 
             />
-            {userProfile && (
+            {userProfile && (location.pathname.includes('/events/fitstreet-2026') || location.pathname === '/my-pass') && (
               <img 
                 src="/logos/Fitstreet Logo simple.png" 
                 alt="Fitstreet" 
