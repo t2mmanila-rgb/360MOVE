@@ -653,7 +653,7 @@ const MyPass: React.FC = () => {
                           registeredActivityIds.includes(activity.id) ? 'bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-100' : 'bg-black/60 opacity-100'
                         }`} />
                         
-                        <div className="absolute inset-0 p-8 pt-16 flex flex-col justify-end items-center text-center gap-6">
+                        <div className="absolute inset-0 p-8 pt-24 flex flex-col justify-end items-center text-center gap-6">
                           <h4 className="text-xl font-black uppercase italic leading-tight tracking-tighter text-white drop-shadow-lg">
                             {activity.title}
                           </h4>
