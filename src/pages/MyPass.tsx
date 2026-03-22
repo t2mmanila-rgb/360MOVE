@@ -59,15 +59,19 @@ const MyPass: React.FC = () => {
     }
   }, [location.search, navigate]);
 
-  // Handle external scan redirect
+  // Handle external scan redirect with double-activation prevention
+  const [lastScanId, setLastScanId] = React.useState<string | null>(null);
   React.useEffect(() => {
     const params = new URLSearchParams(location.search);
     const scanId = params.get('scan');
-    if (scanId && userProfile) {
-      handleScanSuccess(scanId);
+    
+    if (scanId && userProfile && scanId !== lastScanId) {
+      setLastScanId(scanId);
+      // Navigate first to clear the URL before state updates trigger re-renders
       navigate('/my-pass', { replace: true });
+      handleScanSuccess(scanId);
     }
-  }, [location.search, userProfile, navigate, brands]); // Add brands to deps just in case handleScanSuccess uses them
+  }, [location.search, !!userProfile, lastScanId]);
 
   // Sync profile from Supabase
   // Sync profile AND activities from Supabase
