@@ -121,6 +121,7 @@ const GenericDashboard: React.FC = () => {
       if (!genericUser?.pointsShared) {
         const updatedProfile = {
           ...genericUser,
+          points_hr_share: 10,
           pointsShared: true
         };
         handlePointsEarned(updatedProfile);
@@ -172,7 +173,7 @@ const GenericDashboard: React.FC = () => {
         <header className="mb-12">
           <div className="bg-slate-900 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
             <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
-            <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-turquoise/20 rounded-full blur-[100px]" />
+            <div className="absolute -top-40 -right-40 w-96 h-96 bg-brand-turquoise/20 rounded-full blur-[100px] pointer-events-none" />
             
             <div className="relative z-10 flex items-center gap-6 w-full md:w-auto">
               <div className="w-20 h-20 bg-brand-purple rounded-full flex items-center justify-center text-3xl font-black shadow-lg shadow-brand-purple/50 border-4 border-white/10 shrink-0">

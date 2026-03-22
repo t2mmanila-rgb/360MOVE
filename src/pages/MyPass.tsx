@@ -294,7 +294,7 @@ const MyPass: React.FC = () => {
       if (!userProfile?.pointsShared) {
         const updatedProfile = {
           ...userProfile,
-          points: (userProfile?.points || 0) + 10,
+          pointsHRShare: 10,
           pointsShared: true
         };
         setUserProfile(updatedProfile);
@@ -394,7 +394,7 @@ const MyPass: React.FC = () => {
         >
           {/* Points Overview */}
           <div className="bg-white/5 rounded-[3rem] p-8 border border-white/10 mb-12 relative overflow-hidden group hover:border-fs-cyan/30 transition-colors">
-            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
               <Zap className="w-32 h-32 text-fs-cyan" />
             </div>
             <span className="text-[10px] font-black uppercase tracking-widest text-fs-cyan mb-4 block">Total Accumulated Points</span>

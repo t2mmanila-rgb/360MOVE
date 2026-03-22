@@ -84,10 +84,11 @@ const EarnPointsModal: React.FC<EarnPointsModalProps> = ({ isOpen, onClose, onCo
         window.open(shareData.url, '_blank');
       }
       
+      const isGeneric = storageKey.includes('generic');
       const updated = {
         ...profile,
-        pointsHRShare: (profile.pointsHRShare || 0) + 10,
-        points: (profile.points || 0) + 10
+        [isGeneric ? 'points_hr_share' : 'pointsHRShare']: 10,
+        pointsShared: true
       };
 
       // Sync to Supabase
