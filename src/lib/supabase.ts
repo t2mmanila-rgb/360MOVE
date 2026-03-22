@@ -18,25 +18,29 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
   if (!supabaseUrl || !supabaseAnonKey) return profile;
 
   try {
+    const upsertData: any = {
+      email: profile.email,
+      name: profile.name,
+      company_name: profile.company_name,
+      work_setup: profile.work_setup,
+      categories: profile.categories,
+      city: profile.city,
+      profile_type: type,
+      points: profile.points,
+      profile_completed: !!profile.profileCompleted,
+      updated_at: new Date().toISOString()
+    };
+
+    // Only add optional fields if they have values to avoid overwriting with NULL
+    if (profile.ageRange || profile.age_range) upsertData.age_range = profile.ageRange || profile.age_range;
+    if (profile.gender) upsertData.gender = profile.gender;
+    if (profile.fitnessLevel || profile.fitness_level) upsertData.fitness_level = profile.fitnessLevel || profile.fitness_level;
+    if (profile.workoutFrequency || profile.workout_frequency) upsertData.workout_frequency = profile.workoutFrequency || profile.workout_frequency;
+    if (profile.trainingGoal || profile.training_goal) upsertData.training_goal = profile.trainingGoal || profile.training_goal;
+
     const { data, error } = await supabase
       .from('profiles')
-      .upsert({
-        email: profile.email,
-        name: profile.name,
-        company_name: profile.company_name,
-        work_setup: profile.work_setup,
-        categories: profile.categories,
-        city: profile.city,
-        age_range: profile.ageRange || profile.age_range,
-        gender: profile.gender,
-        fitness_level: profile.fitnessLevel || profile.fitness_level,
-        workout_frequency: profile.workoutFrequency || profile.workout_frequency,
-        training_goal: profile.trainingGoal || profile.training_goal,
-        profile_type: type,
-        points: profile.points, // Use the points from the profile object
-        profile_completed: !!profile.profileCompleted,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'email' })
+      .upsert(upsertData, { onConflict: 'email' })
       .select()
       .single();
 
