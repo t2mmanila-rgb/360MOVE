@@ -70,24 +70,59 @@ const MyPass: React.FC = () => {
   }, [location.search, userProfile, navigate, brands]); // Add brands to deps just in case handleScanSuccess uses them
 
   // Sync profile from Supabase
+  // Sync profile AND activities from Supabase
   React.useEffect(() => {
-    const fetchLatestProfile = async () => {
+    const fetchLatestData = async () => {
       if (!userProfile?.email) return;
       try {
-        const { getProfile, migrateLocalData } = await import('../lib/supabase');
+        const { getProfile, getUserActivities, migrateLocalData } = await import('../lib/supabase');
+        
+        // 1. Fetch Profile
         const latest = await getProfile(userProfile?.email);
         if (latest) {
           const merged = { ...userProfile, ...latest };
           setUserProfile(merged);
           localStorage.setItem('user_profile', JSON.stringify(merged));
         }
+
+        // 2. Fetch Activities/Scans
+        const remoteActivities = await getUserActivities(userProfile.email);
+        if (remoteActivities && remoteActivities.length > 0) {
+          const brandIds: string[] = [];
+          const activityIds: string[] = [];
+          
+          remoteActivities.forEach((act: any) => {
+            if (act.activity_id.startsWith('pb-')) {
+              brandIds.push(act.activity_id);
+            } else if (act.status === 'checked-in') {
+              activityIds.push(act.activity_id);
+            }
+          });
+
+          if (brandIds.length > 0) {
+            setCompletedIds(prev => {
+              const combined = Array.from(new Set([...prev, ...brandIds]));
+              localStorage.setItem('completed_ids', JSON.stringify(combined));
+              return combined;
+            });
+          }
+
+          if (activityIds.length > 0) {
+            setScannedActivityIds(prev => {
+              const combined = Array.from(new Set([...prev, ...activityIds]));
+              localStorage.setItem('scanned_activity_ids', JSON.stringify(combined));
+              return combined;
+            });
+          }
+        }
+
         await migrateLocalData();
       } catch (err) {
-        console.warn('Silent sync from Supabase failed:', err);
+        console.warn('Supabase data sync failed:', err);
       }
     };
-    fetchLatestProfile();
-  }, [userProfile?.email, navigate]);
+    fetchLatestData();
+  }, [userProfile?.email]);
 
   // Sync with Spreadsheet for Passport Challenge Details
   React.useEffect(() => {
@@ -247,57 +282,66 @@ const MyPass: React.FC = () => {
       }
       
       const newCompleted = [...completedIds, brand.id];
-        setCompletedIds(newCompleted);
-        localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
-        
-        const isPaid = brand.id === 'pb-viking';
-        const pointsAdded = isPaid && (userProfile?.paidActivities?.includes(brand.id)) ? 10 : 1;
+      setCompletedIds(newCompleted);
+      localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
+      
+      const isPaid = brand.id === 'pb-viking';
+      const pointsAdded = isPaid && (userProfile?.paidActivities?.includes(brand.id)) ? 10 : 1;
 
-        const updated = {
-          ...userProfile
-        };
-        setUserProfile(updated);
-        localStorage.setItem('user_profile', JSON.stringify(updated));
-        
-        // Sync to Supabase
-        try {
-          const { syncUserActivity } = await import('../lib/supabase');
-          await syncUserActivity(updated.email, brand.id, pointsAdded, updated, 'completed', true);
-        } catch (err) {
-          console.warn('Supabase scan sync failed:', err);
-        }
+      // Recalculate total points locally for sync
+      const currentTotal = calculatePointsInternal(newCompleted, scannedActivityIds);
+      const updatedWithPoints = { ...userProfile, points: currentTotal };
+      
+      setUserProfile(updatedWithPoints);
+      localStorage.setItem('user_profile', JSON.stringify(updatedWithPoints));
+      
+      // Sync to Supabase
+      try {
+        const { syncUserActivity } = await import('../lib/supabase');
+        await syncUserActivity(userProfile.email!, brand.id, pointsAdded, updatedWithPoints, 'completed', true);
+      } catch (err) {
+        console.warn('Supabase brand scan sync failed:', err);
+      }
 
-        setSuccessActivity({
-          id: brand.id,
-          title: brand.name,
-          points: pointsAdded,
-          category: brand.category,
-          image: brand.logo,
-          duration: 'Booth Visit',
-          location: brand.booth,
-          description: brand.description
-        } as any);
-        setShowSuccessModal(true);
-        setView('passport');
-      } else if (activity) {
-      // Activity Scan logic - Mark as both Registered and Participated (Checked-in)
+      setSuccessActivity({
+        id: brand.id,
+        title: brand.name,
+        points: pointsAdded,
+        category: brand.category,
+        image: brand.logo,
+        duration: 'Booth Visit',
+        location: brand.booth,
+        description: brand.description
+      } as any);
+      setShowSuccessModal(true);
+      setView('passport');
+    } else if (activity) {
+      // Activity Scan logic
+      let newRegistered = registeredActivityIds;
       if (!registeredActivityIds.includes(activity.id)) {
-        const newRegistered = [...registeredActivityIds, activity.id];
+        newRegistered = [...registeredActivityIds, activity.id];
         setRegisteredActivityIds(newRegistered);
         localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
       }
 
-      // Track as COMPLETED for UI
+      let newScanned = scannedActivityIds;
       if (!scannedActivityIds.includes(activity.id)) {
-        const newScanned = [...scannedActivityIds, activity.id];
+        newScanned = [...scannedActivityIds, activity.id];
         setScannedActivityIds(newScanned);
         localStorage.setItem('scanned_activity_ids', JSON.stringify(newScanned));
+      }
 
-        const updated = {
-          ...userProfile
-        };
-        setUserProfile(updated);
-        localStorage.setItem('user_profile', JSON.stringify(updated));
+      // Sync to Supabase with latest calculated points
+      const currentTotal = calculatePointsInternal(completedIds, newScanned);
+      const updatedWithPoints = { ...userProfile, points: currentTotal };
+      setUserProfile(updatedWithPoints);
+      localStorage.setItem('user_profile', JSON.stringify(updatedWithPoints));
+
+      try {
+        const { syncUserActivity } = await import('../lib/supabase');
+        await syncUserActivity(userProfile.email!, activity.id, activity.points, updatedWithPoints, 'checked-in', true);
+      } catch (err) {
+        console.warn('Supabase activity scan sync failed:', err);
       }
 
       setSuccessActivity(activity);
@@ -311,35 +355,25 @@ const MyPass: React.FC = () => {
         type: 'activity',
         timestamp: new Date().toISOString()
       });
-
-      // Sync to Supabase with latest calculated points
-      try {
-        const { syncUserActivity } = await import('../lib/supabase');
-        // Pre-calculate points to send to Supabase
-        const currentTotal = calculatePoints();
-        const updatedWithPoints = { ...userProfile, points: currentTotal };
-        await syncUserActivity(userProfile.email!, activity.id, activity.points, updatedWithPoints, 'checked-in', true);
-      } catch (err) {
-        console.warn('Supabase activity scan sync failed:', err);
-      }
     } else {
       console.warn('Scanned ID not recognized:', query);
       alert("QR code recognized but not linked to any valid activity or booth.");
     }
   };
 
-  const calculatePoints = () => {
-    // Standard brand scan is now 1 point. G'Ballers and Viking are 10 points ONLY if paid.
-    // The "paidActivities" array should be populated by syncing with the payment sheet.
-    const passportPoints = completedIds.reduce((total, id) => {
+  /**
+   * Internal point calculation that accepts arrays to avoid async state issues
+   */
+  const calculatePointsInternal = (brands: string[], activities: string[]) => {
+    const passportPoints = brands.reduce((total, id) => {
       const isPaidContent = id === 'pb-viking';
       const hasPaid = userProfile?.paidActivities?.includes(id) || false;
       return total + (isPaidContent ? (hasPaid ? 10 : 0) : 1);
     }, 0);
 
-    const scannedPoints = scannedActivityIds.reduce((total, id) => {
-      const activity = allActivities.find(a => a.id === id);
-      return total + (activity?.points || 1);
+    const scannedPoints = activities.reduce((total, id) => {
+      const act = allActivities.find(a => a.id === id);
+      return total + (act?.points || 1);
     }, 0);
 
     const onboardingPoints = userProfile?.pointsOnboarding || 0;
@@ -349,6 +383,8 @@ const MyPass: React.FC = () => {
     
     return 1 + passportPoints + scannedPoints + onboardingPoints + profilePoints + hrSharePoints + friendSharePoints;
   };
+
+  const calculatePoints = () => calculatePointsInternal(completedIds, scannedActivityIds);
 
   const handlePointsEarned = async (updatedProfile: any) => {
     setUserProfile(updatedProfile);

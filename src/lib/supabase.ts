@@ -157,6 +157,26 @@ export const syncUserActivity = async (
   }
 };
 
+/**
+ * Fetch all activities for a user by email.
+ */
+export const getUserActivities = async (email: string) => {
+  if (!supabaseUrl || !supabaseAnonKey) return [];
+
+  try {
+    const { data, error } = await supabase
+      .from('user_activities')
+      .select('*')
+      .ilike('user_email', email.toLowerCase());
+
+    if (error) throw error;
+    return data || [];
+  } catch (err) {
+    console.error('[Supabase] Fetch activities failed:', err);
+    return [];
+  }
+};
+
 export const deleteUserActivity = async (email: string, activityId: string) => {
   if (!supabaseUrl || !supabaseAnonKey) return;
 
@@ -186,8 +206,12 @@ export const migrateLocalData = async () => {
     try {
       const parsed = JSON.parse(fsProfile);
       if (parsed.email) {
-        await syncProfile(parsed, 'fitstreet');
-        results.profiles++;
+        // Fetch existing first to avoid downgrading points
+        const existing = await getProfile(parsed.email);
+        if (!existing || (parsed.points || 0) > (existing.points || 0)) {
+          await syncProfile(parsed, 'fitstreet');
+          results.profiles++;
+        }
         
         // Migrate registrations
         const regIds = localStorage.getItem('registered_activity_ids');
@@ -208,8 +232,11 @@ export const migrateLocalData = async () => {
     try {
       const parsed = JSON.parse(genProfile);
       if (parsed.email) {
-        await syncProfile(parsed, 'generic');
-        results.profiles++;
+        const existing = await getProfile(parsed.email);
+        if (!existing || (parsed.points || 0) > (existing.points || 0)) {
+          await syncProfile(parsed, 'generic');
+          results.profiles++;
+        }
       }
     } catch (err) { console.error('Migration error (Generic):', err); }
   }
