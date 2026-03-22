@@ -37,7 +37,7 @@ const Schedule: React.FC = () => {
       try {
         const { syncUserActivity } = await import('../lib/supabase');
         const activity = schedule.find(a => a.id === id);
-        await syncUserActivity(userProfile.email, id, activity?.points || 1);
+        await syncUserActivity(userProfile.email, id, activity?.points || 1, userProfile);
       } catch (err) {
         console.warn('Supabase registration sync failed:', err);
       }

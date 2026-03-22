@@ -39,7 +39,7 @@ const AdminDashboard: React.FC = () => {
           user_email,
           registered_at,
           is_onsite,
-          profiles:user_email (
+          profiles (
             name,
             age_range,
             gender

@@ -69,7 +69,7 @@ const MyPass: React.FC = () => {
     const fetchLatestProfile = async () => {
       if (!userProfile?.email) return;
       try {
-        const { getProfile } = await import('../lib/supabase');
+        const { getProfile, migrateLocalData } = await import('../lib/supabase');
         const latest = await getProfile(userProfile.email);
         if (latest) {
           console.log('Syncing profile from Supabase:', latest);
@@ -77,6 +77,9 @@ const MyPass: React.FC = () => {
           setUserProfile(merged);
           localStorage.setItem('user_profile', JSON.stringify(merged));
         }
+
+        // Ensure any local-only data is migrated to Supabase (e.g. if sync failed previously)
+        await migrateLocalData();
       } catch (err) {
         console.warn('Silent sync from Supabase failed:', err);
       }
@@ -162,7 +165,7 @@ const MyPass: React.FC = () => {
       if (userProfile?.email) {
         try {
           const { syncUserActivity } = await import('../lib/supabase');
-          await syncUserActivity(userProfile.email, id, activity.points);
+          await syncUserActivity(userProfile.email, id, activity.points, userProfile);
         } catch (err) {
           console.warn('Supabase registration sync failed:', err);
         }
@@ -586,29 +589,40 @@ const MyPass: React.FC = () => {
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
               <Zap className="w-32 h-32 text-fs-cyan" />
             </div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-fs-cyan mb-3 block">Total Accumulated Points</span>
-            <div className="text-7xl font-black italic mb-8 tracking-tighter">{calculatePoints()}</div>
-            <div className="flex gap-3">
-              {!userProfile?.profileCompleted ? (
+            <span className="text-[10px] font-black uppercase tracking-widest text-fs-cyan mb-4 block">Total Accumulated Points</span>
+            
+            <div className="flex items-center justify-between gap-6 mb-8">
+              <div className="text-7xl font-black italic tracking-tighter shrink-0">{calculatePoints()}</div>
+              
+              {!userProfile?.profileCompleted && (
                 <button 
                   onClick={() => setShowEarnPointsModal(true)}
-                  className="flex-1 bg-fs-orange hover:bg-fs-pink transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 text-white shadow-lg shadow-fs-orange/20"
+                  className="flex-grow bg-fs-orange hover:bg-fs-pink transition-all py-4 px-6 rounded-2xl text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 text-white shadow-lg shadow-fs-orange/20 leading-tight text-center"
                 >
-                  <Star className="w-4 h-4 fill-white" /> Earn More Points
+                  <Star className="w-4 h-4 fill-white shrink-0" /> 
+                  <span>Finish your profile and earn 10 extra points</span>
                 </button>
-              ) : (
+              )}
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {userProfile?.profileCompleted && (
                 <button 
                   onClick={() => setShowProfileModal(true)}
-                  className="flex-1 bg-fs-cyan text-slate-900 hover:bg-fs-cyan/90 transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
+                  className="w-full bg-fs-cyan text-slate-900 hover:bg-fs-cyan/90 transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
                 >
                   <User className="w-4 h-4" /> My Profile
                 </button>
               )}
               <button 
-                onClick={() => navigate('/events/fitstreet-2026/schedule')}
-                className="flex-1 bg-white text-slate-900 hover:bg-fs-cyan transition-all py-4 rounded-2xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg"
+                onClick={async () => {
+                   const { migrateLocalData } = await import('../lib/supabase');
+                   const res = await migrateLocalData();
+                   if (res) alert(`Migration: ${res.profiles} profiles, ${res.activities} activities.`);
+                }}
+                className="w-full bg-slate-800 text-slate-400 hover:text-white transition-all py-3 rounded-2xl text-[8px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 border border-white/5"
               >
-                Full Schedule <Calendar className="w-4 h-4" />
+                <Zap className="w-3" /> Sync to Supabase
               </button>
             </div>
           </div>

@@ -36,13 +36,15 @@ const GenericDashboard: React.FC = () => {
       try {
         const parsed = JSON.parse(saved);
         if (parsed.email) {
-          const { getProfile } = await import('../lib/supabase');
+          const { getProfile, migrateLocalData } = await import('../lib/supabase');
           const latest = await getProfile(parsed.email);
           if (latest) {
             const merged = { ...parsed, ...latest };
             setGenericUser(merged);
             localStorage.setItem('generic_user_profile', JSON.stringify(merged));
           }
+          // Ensure any local-only data is migrated to Supabase (e.g. if sync failed previously)
+          await migrateLocalData();
         }
       } catch (err) {
         console.warn('Silent sync from Supabase failed:', err);
@@ -90,9 +92,7 @@ const GenericDashboard: React.FC = () => {
   };
 
   const calculatePoints = () => {
-    // Basic point logic: 50 for creating profile, +50 for detailed profile
-    let points = 50; 
-    if (genericUser?.profileCompleted) points += 50;
+    let points = genericUser?.points || 1;
     
     // Add points for registered programs
     const registeredPoints = registeredPrograms.reduce((total, id) => {
@@ -298,15 +298,27 @@ const GenericDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="relative z-10 flex border border-white/10 bg-white/5 rounded-[2rem] p-6 backdrop-blur-md w-full md:w-auto divide-x divide-white/10">
-              <div className="px-6 flex flex-col items-center">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-turquoise mb-1">Total Points</span>
-                <span className="text-4xl font-black italic">{totalPoints}</span>
+            <div className="flex flex-col items-center gap-4 w-full md:w-auto">
+              <div className="relative z-10 flex border border-white/10 bg-white/5 rounded-[2rem] p-6 backdrop-blur-md w-full divide-x divide-white/10">
+                <div className="px-6 flex flex-col items-center">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-turquoise mb-1">Total Points</span>
+                  <span className="text-4xl font-black italic">{totalPoints}</span>
+                </div>
+                <div className="px-6 flex flex-col items-center">
+                  <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-purple mb-1">Programs</span>
+                  <span className="text-4xl font-black italic">{registeredPrograms.length}</span>
+                </div>
               </div>
-              <div className="px-6 flex flex-col items-center">
-                <span className="text-[10px] font-black uppercase tracking-[0.2em] text-brand-purple mb-1">Programs</span>
-                <span className="text-4xl font-black italic">{registeredPrograms.length}</span>
-              </div>
+              <button 
+                onClick={async () => {
+                  const { migrateLocalData } = await import('../lib/supabase');
+                  const res = await migrateLocalData();
+                  if (res) alert(`Migration: ${res.profiles} profiles, ${res.activities} activities synced.`);
+                }}
+                className="relative z-10 px-8 py-3 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-full text-[8px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 border border-white/5"
+              >
+                <Zap className="w-3 h-3" /> Sync to Supabase
+              </button>
             </div>
           </div>
         </header>

@@ -48,8 +48,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, onClose }) => {
     const savedProfile = localStorage.getItem('user_profile');
     const profile = savedProfile ? JSON.parse(savedProfile) : {};
     
-    // Award 10 points bonus as a starter for Fitstreet
-    const starterPoints = 60; // 50 base + 10 bonus
+    // Award 1 point bonus as a starter for Fitstreet
+    const starterPoints = 1; 
     
     const updatedProfile = { 
       ...profile, 

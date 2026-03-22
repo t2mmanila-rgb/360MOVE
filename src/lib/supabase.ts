@@ -19,16 +19,18 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
 
   try {
     const upsertData: any = {
-      email: profile.email,
+      email: profile.email?.toLowerCase(),
       name: profile.name,
-      company_name: profile.company_name,
-      work_setup: profile.work_setup,
+      company_name: profile.companyName || profile.company_name,
+      work_setup: profile.workSetup || profile.work_setup,
       categories: profile.categories,
       city: profile.city,
       profile_type: type,
       points: profile.points,
       profile_completed: !!profile.profileCompleted,
+      points_profile_completion: profile.pointsProfileCompletion || 0,
       points_shared: !!profile.pointsShared,
+      occupation: profile.occupation,
       updated_at: new Date().toISOString()
     };
 
@@ -46,12 +48,20 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
       .single();
 
     if (error) throw error;
+    
+    // Success alert for debugging purposes on mobile - will be removed once confirmed working
+    if (typeof window !== 'undefined' && profile.name === 'test1') {
+      console.log('✅ SYNC SUCCESS for', profile.email);
+    }
+    
     return data;
   } catch (err) {
-    console.error('Supabase Sync Error:', err);
+    const errorMsg = err instanceof Error ? err.message : JSON.stringify(err);
+    console.error('Supabase Sync Error:', errorMsg);
+    
     // Add a temporary alert for debugging on mobile
     if (typeof window !== 'undefined') {
-      alert(`⚠️ SYNC FAILED: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
+      alert(`⚠️ SYNC FAILED for ${profile.email}: ${errorMsg}`);
     }
     return profile;
   }
@@ -67,7 +77,7 @@ export const getProfile = async (email: string) => {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('email', email)
+      .eq('email', email.toLowerCase())
       .single();
 
     if (error && error.code !== 'PGRST116') throw error; // PGRST116 is 'no rows'
@@ -78,22 +88,54 @@ export const getProfile = async (email: string) => {
   }
 };
 
-export const syncUserActivity = async (email: string, activityId: string, points: number = 0) => {
+export const syncUserActivity = async (email: string, activityId: string, points: number = 0, profile?: any): Promise<void> => {
   if (!supabaseUrl || !supabaseAnonKey) return;
 
-  console.log(`[Supabase] Syncing activity ${activityId} for user ${email}...`);
+  const lowerEmail = email.toLowerCase();
+  let userProfile = profile; // Use a local variable for the profile
+
+  // If a profile is provided, ensure it's synced first to satisfy foreign key constraints
+  if (userProfile) {
+    try {
+      await syncProfile(userProfile, userProfile.profile_type || 'fitstreet');
+    } catch (err) {
+      console.warn('[Supabase] Pre-sync profile failed:', err);
+    }
+  }
+
+  console.log(`[Supabase] Syncing activity ${activityId} for user ${lowerEmail}...`);
   try {
+    // 1. Ensure profile exists first (retry/recovery logic)
+    const { data: profileExists } = await supabase.from('profiles').select('email').eq('email', lowerEmail).single();
+    
+    if (!profileExists && userProfile) {
+      console.log('Profile missing in Supabase during activity sync, creating...', lowerEmail);
+      await syncProfile(userProfile, userProfile.profile_type || 'fitstreet'); 
+    }
+
     const { error } = await supabase
       .from('user_activities')
       .upsert({
-        user_email: email,
+        user_email: lowerEmail,
         activity_id: activityId,
         points_awarded: points,
         registered_at: new Date().toISOString()
-      }, { onConflict: 'user_email,activity_id' });
+      }, { onConflict: 'user_email, activity_id' });
 
     if (error) {
       console.error('[Supabase] Activity sync error:', error);
+      
+      // If error is foreign key violation, try to resolve by creating profile if not already tried
+      if (error.code === '23503' && !userProfile) { // Use userProfile here
+        console.log('[Supabase] Retrying activity sync after creating missing profile...');
+        const stored = localStorage.getItem('user_profile') || localStorage.getItem('generic_user_profile');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          await syncProfile(parsed, parsed.profile_type || 'fitstreet');
+          return syncUserActivity(email, activityId, points, parsed);
+        }
+      }
+
       if (typeof window !== 'undefined') {
         alert(`⚠️ ACTIVITY SYNC FAILED: ${error.message}`);
       }
@@ -160,6 +202,10 @@ export const migrateLocalData = async () => {
         results.profiles++;
       }
     } catch (err) { console.error('Migration error (Generic):', err); }
+  }
+
+  if (results.profiles > 0 || results.activities > 0) {
+    console.log(`[Supabase] Migration Complete: ${results.profiles} profiles, ${results.activities} activities synced.`);
   }
 
   return results;
