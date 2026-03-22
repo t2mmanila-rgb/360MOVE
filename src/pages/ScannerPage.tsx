@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Html5Qrcode } from 'html5-qrcode';
-import { X, Camera, Image as ImageIcon, MapPin } from 'lucide-react';
+import { X, Camera, Image as ImageIcon } from 'lucide-react';
 
 const ScannerPage: React.FC = () => {
   const navigate = useNavigate();
   const [error, setError] = useState<string>('');
   const [isScanning, setIsScanning] = useState(false);
-  const [locationCapturing, setLocationCapturing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const html5QrCode = useRef<Html5Qrcode | null>(null);
 
@@ -27,28 +26,9 @@ const ScannerPage: React.FC = () => {
         await html5QrCode.current.stop().catch(console.error);
     }
     setIsScanning(false);
-    setLocationCapturing(true);
 
-    if ("geolocation" in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const lat = position.coords.latitude;
-          const lon = position.coords.longitude;
-          console.log(`Scanned at location: ${lat}, ${lon}`);
-          setLocationCapturing(false);
-          navigate(`/my-pass?scan=${encodeURIComponent(decodedText)}`);
-        },
-        (err) => {
-          console.error(err);
-          setLocationCapturing(false);
-          navigate(`/my-pass?scan=${encodeURIComponent(decodedText)}`);
-        },
-        { timeout: 5000 }
-      );
-    } else {
-      setLocationCapturing(false);
-      navigate(`/my-pass?scan=${encodeURIComponent(decodedText)}`);
-    }
+    // Direct navigation without location verification for now
+    navigate(`/my-pass?scan=${encodeURIComponent(decodedText)}`);
   };
 
   const startCamera = async () => {
@@ -104,15 +84,8 @@ const ScannerPage: React.FC = () => {
         </div>
 
         <div className="w-full aspect-square rounded-[3rem] overflow-hidden border-4 border-fs-cyan/30 shadow-[0_0_50px_rgba(45,212,191,0.2)] bg-black relative mb-8 flex items-center justify-center">
-          {locationCapturing ? (
-            <div className="text-center p-8 flex flex-col items-center justify-center">
-              <MapPin className="w-12 h-12 text-fs-cyan animate-bounce mb-4" />
-              <p className="text-fs-cyan font-black uppercase tracking-widest text-sm">Verifying Location...</p>
-            </div>
-          ) : (
-            <div id="reader" className="w-full h-full [&_video]:object-cover" />
-          )}
-          {!isScanning && !locationCapturing && (
+          <div id="reader" className="w-full h-full [&_video]:object-cover" />
+          {!isScanning && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                <div className="text-center pt-24 text-slate-500 font-black uppercase text-[10px] tracking-[0.2em]">Ready to connect</div>
             </div>
