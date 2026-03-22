@@ -1003,7 +1003,6 @@ const MyPass: React.FC = () => {
                   { label: "Work Setup", value: userProfile?.workSetup },
                   { label: "Company", value: userProfile?.companyName },
                   { label: "Occupation", value: userProfile?.occupation },
-                  { label: "Income Bracket", value: userProfile?.incomeBracket },
                   { label: "Fitness Level", value: userProfile?.fitnessLevel },
                   { label: "Years Active", value: userProfile?.yearsActive },
                   { label: "Training Goal", value: userProfile?.trainingGoal },
