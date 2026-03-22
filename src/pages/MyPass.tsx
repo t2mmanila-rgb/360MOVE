@@ -480,6 +480,16 @@ const MyPass: React.FC = () => {
   }, [userProfile, allActivities]);
 
   const zones = ['THE ARENA', 'PLAY', 'HEAL', 'EAT', 'GLOW'] as const;
+  const zoneScrollRef = React.useRef<HTMLDivElement>(null);
+
+  const scrollZonesRight = () => {
+    if (zoneScrollRef.current) {
+      zoneScrollRef.current.scrollTo({
+        left: zoneScrollRef.current.scrollWidth,
+        behavior: 'smooth'
+      });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-900 text-white font-sans selection:bg-fs-cyan/30 pb-32 relative">
@@ -637,27 +647,35 @@ const MyPass: React.FC = () => {
           animate={{ opacity: 1, x: 0 }}
           className="px-6"
         >
-          {/* Zone Filter Buttons */}
-          <div className="flex gap-2 mb-12 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2 no-scrollbar">
-            {zones.map(zone => (
-              <button
-                key={zone}
-                onClick={() => setActiveZone(zone)}
-                className={cn(
-                  "px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 border-2",
-                  activeZone === zone 
-                    ? "bg-fs-orange border-fs-orange text-white shadow-xl shadow-fs-orange/20" 
-                    : "bg-white/5 border-white/5 text-slate-500 hover:text-white hover:border-white/20"
-                )}
-              >
-                {zone}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex justify-end items-center gap-2 mb-4">
-            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Zones</span>
-            <ArrowRight className="w-3 h-3 text-white/40" />
+          {/* Zone Filter Row with Scroll Button */}
+          <div className="flex items-center gap-4 mb-10">
+            <div 
+              ref={zoneScrollRef}
+              className="flex-grow flex gap-2 overflow-x-auto pb-2 scrollbar-hide no-scrollbar"
+            >
+              {zones.map(zone => (
+                <button
+                  key={zone}
+                  onClick={() => setActiveZone(zone)}
+                  className={cn(
+                    "px-6 py-3 rounded-full text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap shrink-0 border-2",
+                    activeZone === zone 
+                      ? "bg-fs-orange border-fs-orange text-white shadow-xl shadow-fs-orange/20" 
+                      : "bg-white/5 border-white/5 text-slate-500 hover:text-white hover:border-white/20"
+                  )}
+                >
+                  {zone}
+                </button>
+              ))}
+            </div>
+            
+            <button 
+              onClick={scrollZonesRight}
+              className="flex items-center gap-2 pb-2 shrink-0 group"
+            >
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white transition-colors">Zones</span>
+              <ArrowRight className="w-3 h-3 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
+            </button>
           </div>
 
            {/* Zone-based Passport Challenge */}
