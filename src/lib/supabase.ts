@@ -37,6 +37,10 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
     return data;
   } catch (err) {
     console.error('Supabase Sync Error:', err);
+    // Add a temporary alert for debugging on mobile
+    if (typeof window !== 'undefined') {
+      alert(`⚠️ SYNC FAILED: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
+    }
     return profile;
   }
 };
@@ -78,6 +82,9 @@ export const syncUserActivity = async (email: string, activityId: string, points
     if (error) throw error;
   } catch (err) {
     console.warn('Supabase activity sync failed:', err);
+    if (typeof window !== 'undefined') {
+      alert(`⚠️ ACTIVITY SYNC FAILED: ${err instanceof Error ? err.message : JSON.stringify(err)}`);
+    }
   }
 };
 
