@@ -101,13 +101,9 @@ const GenericDashboard: React.FC = () => {
     // 3. Points from HR Share (10)
     const sharePoints = genericUser?.pointsHRShare || 0;
 
-    // 4. Points from registered programs
-    const registeredPoints = registeredPrograms.reduce((total, id) => {
-      const prog = B2CConfig.find(p => p.id === id);
-      return total + (prog?.points || 10);
-    }, 0);
-
-    return starterPoints + profilePoints + sharePoints + registeredPoints;
+    // 4. Note: activity points are only added via completedIds (scans) in MyPass
+    // GenericDashboard doesn't have scans yet, so we just return the bonuses
+    return starterPoints + profilePoints + sharePoints;
   };
 
   const handlePointsEarned = async (updatedProfile: any) => {
@@ -316,16 +312,6 @@ const GenericDashboard: React.FC = () => {
                   <span className="text-4xl font-black italic">{registeredPrograms.length}</span>
                 </div>
               </div>
-              <button 
-                onClick={async () => {
-                  const { migrateLocalData } = await import('../lib/supabase');
-                  const res = await migrateLocalData();
-                  if (res) alert(`Migration: ${res.profiles} profiles, ${res.activities} activities synced.`);
-                }}
-                className="relative z-10 px-8 py-3 bg-white/5 hover:bg-white/10 text-white/40 hover:text-white rounded-full text-[8px] font-black uppercase tracking-[0.2em] transition-all flex items-center gap-2 border border-white/5"
-              >
-                <Zap className="w-3 h-3" /> Sync to Supabase
-              </button>
             </div>
           </div>
         </header>

@@ -615,16 +615,6 @@ const MyPass: React.FC = () => {
                   <User className="w-4 h-4" /> My Profile
                 </button>
               )}
-              <button 
-                onClick={async () => {
-                   const { migrateLocalData } = await import('../lib/supabase');
-                   const res = await migrateLocalData();
-                   if (res) alert(`Migration: ${res.profiles} profiles, ${res.activities} activities.`);
-                }}
-                className="w-full bg-slate-800 text-slate-400 hover:text-white transition-all py-3 rounded-2xl text-[8px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-2 border border-white/5"
-              >
-                <Zap className="w-3" /> Sync to Supabase
-              </button>
             </div>
           </div>
 
