@@ -49,7 +49,7 @@ const GenericDashboard: React.FC = () => {
       }
     };
     fetchLatestProfile();
-  }, [navigate]);
+  }, [navigate, genericUser?.email]);
 
   const handleRegisterProgram = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();

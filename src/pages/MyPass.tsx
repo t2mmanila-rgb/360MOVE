@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   QrCode, Star, MapPin, Zap, LayoutDashboard, Map as MapIcon, 
-  User, Calendar, CheckCircle2, Globe, ArrowRight, X, Clock, Info
+  User, Calendar, CheckCircle2, Globe, ArrowRight, X, Clock
 } from 'lucide-react';
 import { B2B_PASSPORT_BRANDS, type Activity, type PassportBrand } from '../data/activities';
 import { useActivity } from '../lib/useActivity';
@@ -83,7 +83,7 @@ const MyPass: React.FC = () => {
       }
     };
     fetchLatestProfile();
-  }, []);
+  }, [userProfile?.email, navigate]);
 
   // Sync with Spreadsheet for Passport Challenge Details
   React.useEffect(() => {
@@ -118,7 +118,7 @@ const MyPass: React.FC = () => {
       }
     };
     syncBrands();
-  }, [schedule]);
+  }, [schedule, PASSPORT_CHALLENGE_SHEET_ID]);
 
   // Sync with spreadsheet removed or handled via useActivity if needed
 
@@ -847,7 +847,7 @@ const MyPass: React.FC = () => {
 
               <div className="space-y-4">
                 {[
-                  { label: "Email", value: userProfile?.email || userProfile?.name?.toLowerCase().replace(' ', '.') + '@gmail.com' },
+                  { label: "Email", value: userProfile?.email || userProfile?.name?.toLowerCase()?.replace(' ', '.') + '@gmail.com' },
                   { label: "Mobile", value: userProfile?.mobile || '09XX XXX XXXX' },
                   { label: "Work Setup", value: userProfile?.workSetup },
                   { label: "Company", value: userProfile?.companyName },
