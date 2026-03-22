@@ -29,7 +29,8 @@ const MyPass: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [successActivity, setSuccessActivity] = React.useState<Activity | null>(null);
   const [brands, setBrands] = React.useState<PassportBrand[]>([]);
-  const [scannedActivityIds, setScannedActivityIds] = React.useState<string[]>([]);
+  const [scannedActivityIds, setScannedActivityIds] = React.useState<string[]>(JSON.parse(localStorage.getItem('scanned_activity_ids') || '[]'));
+  const [gLeagueRegistered, setGLeagueRegistered] = React.useState(localStorage.getItem('gleague_registered') === 'true');
   const [isExpanded, setIsExpanded] = React.useState(false);
   const navigate = useNavigate();
 
@@ -129,6 +130,11 @@ const MyPass: React.FC = () => {
     if (e) e.stopPropagation();
     if (registeredActivityIds.includes(id)) return;
     
+    if (id === 'gballers-free') {
+      window.open('https://docs.google.com/forms/d/e/1FAIpQLScWdRby7ihZAorlCC-4Tb0TjNcuV6woib15u47EeMTedC27Yg/viewform', '_blank');
+      setGLeagueRegistered(true);
+      localStorage.setItem('gleague_registered', 'true');
+    }
     const activity = schedule.find(a => a.id === id);
     if (activity) {
       setSuccessActivity(activity);
@@ -177,7 +183,7 @@ const MyPass: React.FC = () => {
     }
 
     if (selectedItem) {
-      logRegistrationToSheet('https://script.google.com/macros/s/AKfycby7--LX2UwK649yFZW8rvjnpxnuIoPoBp_3fN3_nblt03Tm4JWUndvvgb4wZJPnQ38w/exec', {
+      logRegistrationToSheet('https://script.google.com/macros/s/AKfycby7--LX2UwK649yFZW8rvjnpxnuIoBp_3fN3_nblt03Tm4JWUndvvgb4wZJPnQ38w/exec', {
         userId: userProfile?.mobile || 'unknown',
         userName: userProfile?.name || 'Guest',
         activityId: selectedItem.id,
@@ -819,27 +825,35 @@ const MyPass: React.FC = () => {
                   </button>
                 ) : (
                   <>
-                    {!registeredActivityIds.includes(selectedItem.id) ? (
-                      <button 
-                        onClick={(e) => {
-                          handleRegisterActivity(selectedItem.id, e);
-                          setSelectedItem(null);
-                        }}
-                        className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-fs-cyan text-slate-900 shadow-lg shadow-fs-cyan/20 active:scale-95 transition-all"
-                      >
-                        Register to Activate
-                      </button>
-                    ) : (
-                      <button 
-                        onClick={(e) => {
-                          handleUnregisterActivity(selectedItem.id, e);
-                          setSelectedItem(null);
-                        }}
-                        className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 shadow-lg active:scale-95"
-                      >
-                        <X className="w-5 h-5" /> Cancel Registration
-                      </button>
-                    )}
+                  {selectedItem.id === 'gballers-free' && gLeagueRegistered && (
+                    <div className="bg-fs-cyan/10 rounded-2xl p-6 mb-8 border border-fs-cyan/20 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                      <p className="text-fs-cyan text-sm font-bold leading-relaxed italic text-center">
+                        "Thank you for registering to G'League 3x3 Womens Basketball Tournament. Once your payment has been confirmed we will credit 10 points to your passport challenge."
+                      </p>
+                    </div>
+                  )}
+
+                  {!registeredActivityIds.includes(selectedItem.id) ? (
+                    <button 
+                      onClick={(e) => {
+                        handleRegisterActivity(selectedItem.id, e);
+                        setSelectedItem(null);
+                      }}
+                      className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-fs-cyan text-slate-900 shadow-lg shadow-fs-cyan/20 active:scale-95 transition-all"
+                    >
+                      Register to Activate
+                    </button>
+                  ) : (
+                    <button 
+                      onClick={(e) => {
+                        handleUnregisterActivity(selectedItem.id, e);
+                        setSelectedItem(null);
+                      }}
+                      className="w-full py-5 rounded-2xl font-black uppercase tracking-widest flex items-center justify-center gap-3 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white transition-colors border border-red-500/20 shadow-lg active:scale-95"
+                    >
+                      <X className="w-5 h-5" /> Cancel Registration
+                    </button>
+                  )}
                   </>
                 )}
               </div>
