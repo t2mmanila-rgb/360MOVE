@@ -29,6 +29,7 @@ const MyPass: React.FC = () => {
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [successActivity, setSuccessActivity] = React.useState<Activity | null>(null);
   const [brands, setBrands] = React.useState<PassportBrand[]>([]);
+  const [scannedActivityIds, setScannedActivityIds] = React.useState<string[]>([]);
   const [isExpanded, setIsExpanded] = React.useState(false);
   const navigate = useNavigate();
 
@@ -36,6 +37,7 @@ const MyPass: React.FC = () => {
     const savedProfile = localStorage.getItem('user_profile');
     const savedCompleted = localStorage.getItem('completed_ids');
     const savedRegistered = localStorage.getItem('registered_activity_ids');
+    const savedScanned = localStorage.getItem('scanned_activity_ids');
     
     if (savedProfile) {
       const profile = JSON.parse(savedProfile);
@@ -43,6 +45,7 @@ const MyPass: React.FC = () => {
     }
     if (savedCompleted) setCompletedIds(JSON.parse(savedCompleted));
     if (savedRegistered) setRegisteredActivityIds(JSON.parse(savedRegistered));
+    if (savedScanned) setScannedActivityIds(JSON.parse(savedScanned));
   }, []);
 
   const location = useLocation();
@@ -274,6 +277,13 @@ const MyPass: React.FC = () => {
         const newRegistered = [...registeredActivityIds, activity.id];
         setRegisteredActivityIds(newRegistered);
         localStorage.setItem('registered_activity_ids', JSON.stringify(newRegistered));
+      }
+
+      // Track as COMPLETED for UI
+      if (!scannedActivityIds.includes(activity.id)) {
+        const newScanned = [...scannedActivityIds, activity.id];
+        setScannedActivityIds(newScanned);
+        localStorage.setItem('scanned_activity_ids', JSON.stringify(newScanned));
       }
 
       setSuccessActivity(activity);
@@ -650,7 +660,9 @@ const MyPass: React.FC = () => {
                                 : 'bg-white text-slate-900 border-2 border-white hover:bg-fs-cyan hover:border-fs-cyan active:scale-95'
                             }`}
                           >
-                            {registeredActivityIds.includes(activity.id) ? (
+                            {scannedActivityIds.includes(activity.id) ? (
+                              <><CheckCircle2 className="w-5 h-5" /> COMPLETED</>
+                            ) : registeredActivityIds.includes(activity.id) ? (
                               <><CheckCircle2 className="w-5 h-5" /> ACTIVE</>
                             ) : (
                               'ACTIVATE'
@@ -836,40 +848,22 @@ const MyPass: React.FC = () => {
               <div className="w-24 h-24 bg-fs-cyan/20 rounded-full flex items-center justify-center mx-auto mb-8 animate-pulse">
                 <CheckCircle2 className="w-12 h-12 text-fs-cyan" />
               </div>
-              <h3 className="text-3xl font-black italic uppercase italic tracking-tighter mb-4">You're In!</h3>
-              <p className="text-slate-400 text-sm mb-8 font-medium">
-                You've successfully registered for <span className="text-white font-bold">{successActivity.title}</span>.
+              <h3 className="text-3xl font-black italic uppercase tracking-tighter mb-4 text-white leading-tight">
+                {successActivity.id?.startsWith('pb-') ? 'Congratulations 👏🥳' : "YOU'RE IN!"}
+              </h3>
+              <p className="text-slate-400 text-sm mb-12 font-medium px-4 leading-relaxed">
+                {successActivity.id?.startsWith('pb-') 
+                  ? <>You've completed the <span className="text-fs-cyan font-bold italic">{successActivity.title}</span> passport challenge!</>
+                  : <>Thank you for registering at <span className="text-fs-cyan font-bold italic">{successActivity.title}</span>.</>}
               </p>
               
-              <div className="bg-white/5 rounded-3xl p-6 mb-8 border border-white/5 space-y-4">
-                <div className="flex items-center gap-3 text-left">
-                  <Calendar className="w-5 h-5 text-fs-orange" />
-                  <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Date & Time</p>
-                    <p className="text-xs font-bold text-white">{successActivity.time || '10:00 AM'} | May 09, 2026</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 text-left">
-                  <MapPin className="w-5 h-5 text-fs-orange" />
-                  <div>
-                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Area / Location</p>
-                    <p className="text-xs font-bold text-white uppercase">{successActivity.location}</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-fs-orange/10 border border-fs-orange/20 rounded-2xl p-4 mb-8">
-                <p className="text-[11px] font-bold text-fs-orange uppercase tracking-wider leading-relaxed italic">
-                  IMPORTANT: You must sign-in at the registration area on location to earn your points!
-                </p>
-              </div>
-
               <button 
                 onClick={() => setShowSuccessModal(false)}
-                className="w-full py-5 bg-fs-cyan text-slate-900 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-fs-cyan/20 active:scale-95 transition-all"
+                className="w-full py-6 bg-fs-cyan text-slate-900 rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-fs-cyan/20 active:scale-95 transition-all"
               >
-                Got It!
+                GOT IT!
               </button>
+              
             </motion.div>
           </div>
         )}

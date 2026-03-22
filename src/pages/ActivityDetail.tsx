@@ -92,9 +92,16 @@ const ActivityDetail: React.FC = () => {
                 localStorage.setItem('completed_ids', JSON.stringify([...completed, id]));
               }
             } else {
+              // Activity Scan
               const registered = JSON.parse(localStorage.getItem('registered_activity_ids') || '[]');
               if (!registered.includes(id)) {
                 localStorage.setItem('registered_activity_ids', JSON.stringify([...registered, id]));
+              }
+
+              // Also mark as SCANNED/COMPLETED for UI
+              const scanned = JSON.parse(localStorage.getItem('scanned_activity_ids') || '[]');
+              if (!scanned.includes(id)) {
+                localStorage.setItem('scanned_activity_ids', JSON.stringify([...scanned, id]));
               }
             }
 
@@ -144,17 +151,19 @@ const ActivityDetail: React.FC = () => {
               </div>
 
               <h2 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900 mb-4 leading-[0.9]">
-                Points <br /><span className="text-brand-turquoise">UNLOCKED!</span>
+                {id?.startsWith('pb-') ? 'Congratulations 👏🥳' : "YOU'RE IN!"}
               </h2>
               <p className="text-slate-500 font-medium mb-10 leading-relaxed text-sm px-4">
-                Thank you for {id?.startsWith('pb-') ? 'visiting' : 'joining'} <span className="font-black italic text-slate-900">{activity.title}</span>! You've received <span className="text-brand-purple font-black">+{activity.points} points</span>!
+                {id?.startsWith('pb-') 
+                  ? <>You've completed the <span className="font-black italic text-slate-900">{activity.title}</span> passport challenge!</>
+                  : <>Thank you for registering at <span className="font-black italic text-slate-900">{activity.title}</span>.</>}
               </p>
 
               <button 
                 onClick={() => setShowSuccess(false)}
-                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase italic tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-slate-900/20"
+                className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest hover:scale-[1.02] transition-all shadow-xl shadow-slate-900/20"
               >
-                SWEET!
+                GOT IT!
               </button>
             </motion.div>
           </motion.div>
