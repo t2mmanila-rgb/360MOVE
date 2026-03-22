@@ -191,13 +191,33 @@ const MyPass: React.FC = () => {
       return;
     }
 
-    const query = decodedTextValue.toLowerCase().trim();
+    let rawQuery = decodedTextValue.trim();
+    
+    // Extract ID from URL if necessary (e.g., https://.../activity/fs-morning-run)
+    if (rawQuery.startsWith('http')) {
+      try {
+        const url = new URL(rawQuery);
+        // Special case: check if it's a deep link with ?scan=true
+        const scanId = url.searchParams.get('scanId') || url.searchParams.get('id');
+        if (scanId) {
+          rawQuery = scanId;
+        } else {
+          const pathParts = url.pathname.split('/').filter(p => p !== '');
+          rawQuery = pathParts[pathParts.length - 1] || rawQuery;
+        }
+      } catch (e) {
+        console.warn('Failed to parse scanned URL:', rawQuery);
+      }
+    }
+
+    const query = rawQuery.toLowerCase().trim();
     const slugQuery = query.replace(/\s+/g, '-');
 
     // 1. Check if it's a Brand/Booth
     const brand = [...brands, ...B2B_PASSPORT_BRANDS].find(b => 
       b.id.toLowerCase() === query ||
       b.id.toLowerCase() === `pb-${query}` ||
+      b.id.toLowerCase() === `pb-${slugQuery}` ||
       b.name.toLowerCase().includes(query) ||
       query.includes(b.name.toLowerCase())
     );
