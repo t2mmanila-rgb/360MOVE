@@ -15,7 +15,9 @@ import { cn } from '../lib/utils';
 type ViewMode = 'dashboard' | 'passport';
 
 const MyPass: React.FC = () => {
-  const { schedule } = useActivity();
+  const { schedule, programs } = useActivity();
+  const allActivities = React.useMemo(() => [...schedule, ...programs], [schedule, programs]);
+  
   const [userProfile, setUserProfile] = React.useState<any>(null);
   const [completedIds, setCompletedIds] = React.useState<string[]>([]);
   const [registeredActivityIds, setRegisteredActivityIds] = React.useState<string[]>([]);
@@ -26,8 +28,7 @@ const MyPass: React.FC = () => {
   const [showProfileModal, setShowProfileModal] = React.useState(false);
   const [showSuccessModal, setShowSuccessModal] = React.useState(false);
   const [successActivity, setSuccessActivity] = React.useState<Activity | null>(null);
-  const [brands, setBrands] = React.useState<PassportBrand[]>([]); // Will load from original source or API
-  const [activities, setActivities] = React.useState<Activity[]>([]);
+  const [brands, setBrands] = React.useState<PassportBrand[]>([]);
   const [isExpanded, setIsExpanded] = React.useState(false);
   const navigate = useNavigate();
 
@@ -64,7 +65,7 @@ const MyPass: React.FC = () => {
     }
   }, [location.search, brands, userProfile, navigate]);
 
-  // Sync profile from Supabase to handle multi-device / out-of-sync points
+  // Sync profile from Supabase
   React.useEffect(() => {
     const fetchLatestProfile = async () => {
       if (!userProfile?.email) return;
@@ -72,13 +73,10 @@ const MyPass: React.FC = () => {
         const { getProfile, migrateLocalData } = await import('../lib/supabase');
         const latest = await getProfile(userProfile.email);
         if (latest) {
-          console.log('Syncing profile from Supabase:', latest);
           const merged = { ...userProfile, ...latest };
           setUserProfile(merged);
           localStorage.setItem('user_profile', JSON.stringify(merged));
         }
-
-        // Ensure any local-only data is migrated to Supabase (e.g. if sync failed previously)
         await migrateLocalData();
       } catch (err) {
         console.warn('Silent sync from Supabase failed:', err);
@@ -94,7 +92,6 @@ const MyPass: React.FC = () => {
       
       const remoteData = await fetchGoogleSheetData(PASSPORT_CHALLENGE_SHEET_ID);
       if (remoteData && remoteData.length > 0) {
-        // Merge remote data with existing brands
         const updatedBrands = B2B_PASSPORT_BRANDS.map(localBrand => {
           const remoteBrand = remoteData.find((r: any) => {
             const rName = r['Brand Name'] || r.name || r.Brand || '';
@@ -118,39 +115,12 @@ const MyPass: React.FC = () => {
           return localBrand;
         });
         setBrands(updatedBrands);
-
-        // Also merge remote data with existing activities (like Viking Games)
-        const updatedActivities = schedule.map(localAct => {
-          const remoteAct = remoteData.find((r: any) => {
-            const rName = r['Brand Name'] || r.name || r.Brand || '';
-            const normalizedRName = rName.toLowerCase();
-            const normalizedLocalName = localAct.title.toLowerCase();
-            return (rName && (normalizedRName.includes(normalizedLocalName) || normalizedLocalName.includes(normalizedRName))) ||
-                   (rName.includes("G'Ballers") && localAct.id === 'gballers-free') ||
-                   (rName.includes("Viking Games") && localAct.id === 'viking-games-sat');
-          });
-          
-          if (remoteAct) {
-            return {
-              ...localAct,
-              description: remoteAct['Description'] || remoteAct.description || localAct.description,
-              mechanics: remoteAct['Mechanics'] || remoteAct.mechanics || localAct.mechanics,
-            };
-          }
-          return localAct;
-        });
-        setActivities(updatedActivities);
       }
     };
     syncBrands();
-  }, []);
-
-  // Keep activities strictly synced with useActivity local overrides
-  React.useEffect(() => {
-    if (activities.length === 0 || schedule.length > 0) { // Naive dependency update for schedule
-      setActivities(schedule);
-    }
   }, [schedule]);
+
+  // Sync with spreadsheet removed or handled via useActivity if needed
 
   const handleRegisterActivity = async (id: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
@@ -342,7 +312,7 @@ const MyPass: React.FC = () => {
   };
 
   const recommendedActivities = React.useMemo(() => {
-    const all = [...activities];
+    const all = [...allActivities];
     const goal = userProfile?.training_goal?.toLowerCase() || '';
     const interests = (userProfile?.interests || []).map((i: string) => i.toLowerCase());
 
@@ -367,7 +337,7 @@ const MyPass: React.FC = () => {
       if (!aMatch && bMatch) return 1;
       return 0;
     }).slice(0, 3);
-  }, [userProfile, activities]);
+  }, [userProfile, allActivities]);
 
   const zones = ['THE ARENA', 'PLAY', 'HEAL', 'EAT', 'GLOW'] as const;
 
@@ -443,34 +413,46 @@ const MyPass: React.FC = () => {
               <h3 className="text-3xl font-black italic mb-6 tracking-tight uppercase leading-tight">
                 {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
               </h3>
-              
-              <div className="mb-8">
-                <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Info className="w-4 h-4" /> About {'name' in selectedItem ? selectedItem.name : (selectedItem as Activity).title}
+                            <div className="flex flex-wrap gap-3 mb-8">
+                  <div className="px-4 py-1.5 rounded-full bg-fs-cyan/10 border border-fs-cyan/20 text-fs-cyan text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Calendar className="w-3 h-3" /> {(selectedItem as any).day || 'Fitstreet 2026'}
+                  </div>
+                  <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Clock className="w-3 h-3" /> {(selectedItem as any).time || 'All Day'}
+                  </div>
+                  <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-slate-400 text-[9px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <MapPin className="w-3 h-3" /> {(selectedItem as any).location || 'BGC Amphitheater'}
+                  </div>
+                </div>
+
+                <div className="mb-8">
+                <h3 className="text-white font-black text-2xl uppercase italic tracking-tighter mb-4 flex items-center gap-3">
+                  <span className="w-1.5 h-6 bg-fs-cyan rounded-full" />
+                  About {(selectedItem as any).title || (selectedItem as any).name}.
                 </h3>
-                <div className="relative">
-                  <p className={`text-slate-400 text-sm leading-relaxed ${!isExpanded ? 'line-clamp-3' : ''}`}>
-                    {selectedItem.description}
+                <div className="space-y-6">
+                  <p className="text-slate-400 text-sm leading-relaxed italic">
+                    "{(selectedItem as any).description}"
                   </p>
-                  {!isExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-slate-800 to-transparent pointer-events-none" />
+                  
+                  {(selectedItem as any).extendedDescription && (
+                    <p className={`text-slate-200 text-sm leading-relaxed font-medium bg-white/5 p-6 rounded-2xl border border-white/5 ${!isExpanded ? 'line-clamp-4' : ''}`}>
+                      {(selectedItem as any).extendedDescription}
+                    </p>
                   )}
                 </div>
               </div>
               
-              <div className="bg-white/5 rounded-2xl p-6 mb-8 border border-white/5 relative">
-                <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
-                  <Zap className="w-4 h-4" /> Challenge Mechanics
-                </h3>
-                <div className="relative">
+              {(selectedItem as any).mechanics && (
+                <div className="bg-fs-cyan/5 rounded-[2rem] p-8 mb-8 border border-fs-cyan/20">
+                  <h3 className="text-fs-cyan font-black text-xs uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <Zap className="w-4 h-4 fill-fs-cyan" /> Challenge Mechanics
+                  </h3>
                   <p className={`text-white text-sm font-medium leading-relaxed italic ${!isExpanded ? 'line-clamp-3' : ''}`}>
-                    {selectedItem.mechanics}
+                    {(selectedItem as any).mechanics}
                   </p>
-                  {!isExpanded && (
-                    <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-[#243347] to-transparent pointer-events-none" />
-                  )}
                 </div>
-              </div>
+              )}
 
               {((selectedItem.description?.length || 0) > 50 || (selectedItem.mechanics?.length || 0) > 50) && (
                 <button 
@@ -756,7 +738,7 @@ const MyPass: React.FC = () => {
                    ))}
 
                    {/* Activity Item (Inactive/Active) */}
-                    {activities.filter(act => act.zone === zone).map(activity => (
+                    {allActivities.filter(act => act.zone === zone).map(activity => (
                       <div 
                         key={activity.id} 
                         onClick={() => { setSelectedItem(activity); setIsExpanded(false); }}

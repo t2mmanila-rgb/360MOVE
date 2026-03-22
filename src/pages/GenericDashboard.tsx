@@ -20,7 +20,6 @@ const GenericDashboard: React.FC = () => {
     if (savedGeneric) {
       setGenericUser(JSON.parse(savedGeneric));
     } else {
-      // If not logged in, redirect to register
       navigate('/register');
       return;
     }
@@ -43,7 +42,6 @@ const GenericDashboard: React.FC = () => {
             setGenericUser(merged);
             localStorage.setItem('generic_user_profile', JSON.stringify(merged));
           }
-          // Ensure any local-only data is migrated to Supabase (e.g. if sync failed previously)
           await migrateLocalData();
         }
       } catch (err) {
@@ -61,11 +59,9 @@ const GenericDashboard: React.FC = () => {
     setRegisteredPrograms(newRegistered);
     localStorage.setItem('registered_generic_activities', JSON.stringify(newRegistered));
 
-    // Sync to Supabase
     if (genericUser?.email) {
       try {
         const { syncUserActivity } = await import('../lib/supabase');
-        // Find points from programs config
         const activity = B2CConfig.find(p => p.id === id || p.title === id);
         await syncUserActivity(genericUser.email, id, activity?.points || 10);
       } catch (err) {
@@ -80,7 +76,6 @@ const GenericDashboard: React.FC = () => {
     setRegisteredPrograms(newRegistered);
     localStorage.setItem('registered_generic_activities', JSON.stringify(newRegistered));
 
-    // Sync to Supabase
     if (genericUser?.email) {
       try {
         const { deleteUserActivity } = await import('../lib/supabase');
@@ -92,31 +87,20 @@ const GenericDashboard: React.FC = () => {
   };
 
   const calculatePoints = () => {
-    // 1. Initial starter point (1)
     const starterPoints = 1;
-    
-    // 2. Extra points from profile completion (10)
     const profilePoints = genericUser?.profileCompleted ? 10 : 0;
-    
-    // 3. Points from HR Share (10)
     const sharePoints = genericUser?.pointsHRShare || 0;
-
-    // 4. Note: activity points are only added via completedIds (scans) in MyPass
-    // GenericDashboard doesn't have scans yet, so we just return the bonuses
     return starterPoints + profilePoints + sharePoints;
   };
 
   const handlePointsEarned = async (updatedProfile: any) => {
     setGenericUser(updatedProfile);
-    
-    // Sync to Supabase
     try {
       const { syncProfile } = await import('../lib/supabase');
       await syncProfile(updatedProfile, 'generic');
     } catch (err) {
       console.warn('Supabase generic points sync failed:', err);
     }
-
     localStorage.setItem('generic_user_profile', JSON.stringify(updatedProfile));
   };
 
@@ -134,7 +118,6 @@ const GenericDashboard: React.FC = () => {
         window.open(`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`, '_blank');
       }
 
-      // Award 10 points if not already shared
       if (!genericUser?.pointsShared) {
         const updatedProfile = {
           ...genericUser,
@@ -155,7 +138,6 @@ const GenericDashboard: React.FC = () => {
     const goal = genericUser?.training_goal?.toLowerCase() || '';
     const interests = (genericUser?.interests || []).map((i: string) => i.toLowerCase());
 
-    // Map common goals to tags
     const targetTags: string[] = [...interests];
     if (goal.includes('high-octane')) targetTags.push('cardio', 'high intensity', 'physical');
     if (goal.includes('mind-body')) targetTags.push('mindfulness', 'wellness', 'recovery', 'heal');
@@ -197,12 +179,13 @@ const GenericDashboard: React.FC = () => {
             >
               <X className="w-5 h-5" />
             </button>
+            
             <div className="h-48 relative shrink-0">
               <img src={selectedProgram.image} alt={selectedProgram.title} className="w-full h-full object-cover" />
-              <div className="absolute inset-0 bg-gradient-to-t from-slate-900 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-slate-900/80 to-transparent" />
               <div className="absolute bottom-4 left-6 right-6">
                 <div className="text-[10px] font-black uppercase tracking-widest text-brand-turquoise mb-1 flex items-center gap-2">
-                  <Star className="w-3 h-3 fill-brand-turquoise text-brand-turquoise" />
+                  <Star className="w-3 h-3 fill-brand-turquoise" />
                   {selectedProgram.category} 
                 </div>
                 <h3 className="text-2xl font-black text-white italic uppercase tracking-tighter leading-none">
@@ -211,30 +194,65 @@ const GenericDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-6 overflow-y-auto space-y-6">
-              {/* Universal Date/Time Block */}
-              <div className="flex flex-wrap gap-4 text-xs font-black uppercase tracking-widest text-slate-500">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-brand-purple" />
-                    <span>Every Weekend</span>
+            <div className="p-8 overflow-y-auto">
+              <div className="grid grid-cols-2 gap-4 mb-8">
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <Calendar className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Date</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-fs-pink" />
-                    <span>{selectedProgram.duration || '60 mins'}</span>
+                  <div className="text-sm font-black text-slate-900 truncate">
+                    {selectedProgram.day || 'May 9, 2026'}
                   </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-brand-turquoise" />
-                    <span>{selectedProgram.pax ? `Max ${selectedProgram.pax} pax` : 'BGC Studio'}</span>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <Clock className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Time</span>
                   </div>
+                  <div className="text-sm font-black text-slate-900 truncate">
+                    {selectedProgram.time || 'All Day'}
+                  </div>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 col-span-2">
+                  <div className="flex items-center gap-2 text-slate-400 mb-1">
+                    <MapPin className="w-3.5 h-3.5" />
+                    <span className="text-[10px] font-bold uppercase tracking-wider">Location</span>
+                  </div>
+                  <div className="text-sm font-black text-slate-900">
+                    {selectedProgram.location || 'BGC Amphitheater'}
+                  </div>
+                </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-6 mb-8">
                 <div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 mb-2">About Program</h4>
-                  <p className="text-sm text-slate-600 font-medium leading-relaxed">
-                    {selectedProgram.description || 'A premium movement experience curated by 360MOVE.'}
+                  <h4 className="flex items-center gap-2 text-fs-orange font-black text-[10px] uppercase tracking-widest mb-3">
+                    <Zap className="w-4 h-4 fill-fs-orange" /> About the Challenge.
+                  </h4>
+                  <p className="text-slate-600 text-sm leading-relaxed font-medium italic">
+                    "{selectedProgram.description}"
                   </p>
                 </div>
+
+                {selectedProgram.extendedDescription && (
+                  <div className="bg-slate-900 rounded-2xl p-6 text-white border border-slate-800">
+                    <p className="text-sm leading-relaxed font-medium opacity-90">
+                      {selectedProgram.extendedDescription}
+                    </p>
+                  </div>
+                )}
+
+                {selectedProgram.mechanics && (
+                  <div className="bg-fs-cyan/5 rounded-2xl p-6 border border-fs-cyan/20 font-sans italic">
+                    <h4 className="flex items-center gap-2 text-fs-cyan font-black text-[10px] uppercase tracking-widest mb-3">
+                      <Zap className="w-4 h-4 fill-fs-cyan" /> Participation Mechanics.
+                    </h4>
+                    <p className="text-slate-700 text-sm leading-relaxed font-black">
+                      {selectedProgram.mechanics}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -255,7 +273,7 @@ const GenericDashboard: React.FC = () => {
                     handleUnregisterProgram(selectedProgram.id || selectedProgram.title, e);
                     setSelectedProgram(null);
                   }}
-                  className="pill-button bg-red-500 hover:bg-red-600 text-white shadow-xl shadow-red-500/20"
+                  className="px-6 py-3 bg-red-500 text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-red-500/20"
                 >
                   Cancel Registration
                 </button>
@@ -265,7 +283,7 @@ const GenericDashboard: React.FC = () => {
                     handleRegisterProgram(selectedProgram.id || selectedProgram.title, e);
                     setSelectedProgram(null);
                   }}
-                  className="pill-button bg-brand-purple hover:bg-brand-royalblue text-white shadow-xl shadow-brand-purple/20"
+                  className="px-6 py-3 bg-brand-purple text-white rounded-full text-xs font-black uppercase tracking-widest shadow-xl shadow-brand-purple/20"
                 >
                   Confirm Registration
                 </button>
@@ -281,7 +299,6 @@ const GenericDashboard: React.FC = () => {
     <div className="min-h-screen bg-slate-50 pt-24 pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* Header & Points */}
         <header className="mb-12">
           <div className="bg-slate-900 rounded-[3rem] p-8 md:p-12 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8 shadow-2xl">
             <div className="absolute inset-0 opacity-20 bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
@@ -322,9 +339,8 @@ const GenericDashboard: React.FC = () => {
           </div>
         </header>
 
-        {/* Profile Completion CTA */}
         {!genericUser?.profileCompleted && (
-          <div className="mb-12 bg-white rounded-[2rem] p-8 glass flex flex-col sm:flex-row items-center justify-between gap-6 hover:border-brand-turquoise/30 transition-all cursor-pointer" onClick={() => setShowEarnPointsModal(true)}>
+          <div className="mb-12 bg-white rounded-[2rem] p-8 flex flex-col sm:flex-row items-center justify-between gap-6 hover:border-brand-turquoise/30 transition-all cursor-pointer shadow-sm border border-slate-100" onClick={() => setShowEarnPointsModal(true)}>
             <div className="flex items-center gap-6">
               <div className="w-16 h-16 bg-brand-turquoise/10 rounded-full flex items-center justify-center">
                 <Zap className="w-8 h-8 text-brand-turquoise" />
@@ -334,7 +350,7 @@ const GenericDashboard: React.FC = () => {
                 <p className="text-slate-500 font-medium">Earn +50 points instantly by customizing your 360MOVE preferences.</p>
               </div>
             </div>
-            <button className="pill-button bg-slate-900 text-white whitespace-nowrap hidden sm:flex items-center gap-2">
+            <button className="px-6 py-3 bg-slate-900 text-white rounded-full text-xs font-black uppercase tracking-widest whitespace-nowrap hidden sm:flex items-center gap-2">
               Complete Profile <ArrowRight className="w-4 h-4" />
             </button>
           </div>
@@ -356,9 +372,6 @@ const GenericDashboard: React.FC = () => {
           <ArrowRight className="w-5 h-5 text-brand-purple group-hover:translate-x-2 transition-transform" />
         </button>
 
-        {/* B2C Programs Sections */}
-
-        {/* Available Programs */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Your Catalog</h2>
