@@ -899,6 +899,12 @@ const MyPass: React.FC = () => {
                   )}
 
                   {!registeredActivityIds.includes(selectedItem.id) ? (
+                    <>
+                    <div className="bg-slate-800/50 rounded-2xl p-5 mb-6 border border-white/5">
+                      <p className="text-slate-400 text-[11px] font-bold uppercase tracking-widest leading-relaxed text-center">
+                        Note: Points will be credited on the day of the activity after registering on site.
+                      </p>
+                    </div>
                     <button 
                       onClick={(e) => {
                         handleRegisterActivity(selectedItem.id, e);
@@ -908,6 +914,7 @@ const MyPass: React.FC = () => {
                     >
                       Register to Activate
                     </button>
+                    </>
                   ) : (
                     <button 
                       onClick={(e) => {
