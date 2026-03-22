@@ -235,8 +235,12 @@ const MyPass: React.FC = () => {
     );
 
     if (brand) {
-      if (!completedIds.includes(brand.id)) {
-        const newCompleted = [...completedIds, brand.id];
+      if (completedIds.includes(brand.id)) {
+        alert(`You have already accomplished the ${brand.name} passport challenge`);
+        return;
+      }
+      
+      const newCompleted = [...completedIds, brand.id];
         setCompletedIds(newCompleted);
         localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
         
@@ -270,8 +274,7 @@ const MyPass: React.FC = () => {
         } as any);
         setShowSuccessModal(true);
         setView('passport');
-      }
-    } else if (activity) {
+      } else if (activity) {
       // Activity Scan logic - Mark as both Registered and Participated (Checked-in)
       if (!registeredActivityIds.includes(activity.id)) {
         const newRegistered = [...registeredActivityIds, activity.id];

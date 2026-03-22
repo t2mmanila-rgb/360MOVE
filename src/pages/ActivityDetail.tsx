@@ -88,9 +88,12 @@ const ActivityDetail: React.FC = () => {
             // 1. Update localStorage for immediate UI feedback in MyPass.tsx
             if (isBrand) {
               const completed = JSON.parse(localStorage.getItem('completed_ids') || '[]');
-              if (!completed.includes(id)) {
-                localStorage.setItem('completed_ids', JSON.stringify([...completed, id]));
+              if (completed.includes(id)) {
+                alert(`You have already accomplished the ${activity.title} passport challenge`);
+                setShowSuccess(false);
+                return;
               }
+              localStorage.setItem('completed_ids', JSON.stringify([...completed, id]));
             } else {
               // Activity Scan
               const registered = JSON.parse(localStorage.getItem('registered_activity_ids') || '[]');
