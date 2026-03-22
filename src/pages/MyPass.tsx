@@ -102,7 +102,7 @@ const MyPass: React.FC = () => {
             const normalizedLocalName = localBrand.name.toLowerCase();
             return r.id === localBrand.id || 
                    (rName && (normalizedRName.includes(normalizedLocalName) || normalizedLocalName.includes(normalizedRName))) ||
-                   (rName.includes("G'Ballers") && localBrand.id === 'pb-gballers') ||
+                   (rName.includes("G'League") && localBrand.id === 'pb-gballers') ||
                    (rName.includes("Viking Games") && localBrand.id === 'pb-viking');
           });
           
@@ -244,7 +244,7 @@ const MyPass: React.FC = () => {
         setCompletedIds(newCompleted);
         localStorage.setItem('completed_ids', JSON.stringify(newCompleted));
         
-        const isPaid = brand.id === 'pb-gballers' || brand.id === 'pb-viking';
+        const isPaid = brand.id === 'pb-viking';
         const pointsAdded = isPaid && (userProfile?.paidActivities?.includes(brand.id)) ? 10 : 1;
 
         const updated = {
@@ -309,7 +309,7 @@ const MyPass: React.FC = () => {
     // Standard brand scan is now 1 point. G'Ballers and Viking are 10 points ONLY if paid.
     // The "paidActivities" array should be populated by syncing with the payment sheet.
     const passportPoints = completedIds.reduce((total, id) => {
-      const isPaidContent = id === 'pb-gballers' || id === 'pb-viking';
+      const isPaidContent = id === 'pb-viking';
       const hasPaid = userProfile?.paidActivities?.includes(id) || false;
       return total + (isPaidContent ? (hasPaid ? 10 : 0) : 1);
     }, 0);
@@ -713,13 +713,20 @@ const MyPass: React.FC = () => {
                 </button>
               </div>
 
-              <div className="relative h-72 shrink-0">
+              <div className="relative h-80 shrink-0">
                  <img 
                    src={'logo' in selectedItem ? resolveDriveImageUrl((selectedItem as any).logo) : (selectedItem as Activity).image} 
                    className="w-full h-full object-cover" 
                    alt={'name' in selectedItem ? (selectedItem as any).name : (selectedItem as Activity).title} 
                  />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-transparent to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-800 via-slate-800/20 to-transparent" />
+                
+                {/* Title Overlay in Image Frame */}
+                <div className="absolute bottom-8 left-8 right-8">
+                  <h3 className="text-4xl font-black italic tracking-tighter uppercase leading-[0.85] text-white drop-shadow-2xl">
+                    {'name' in selectedItem ? (selectedItem as any).name : (selectedItem as Activity).title}
+                  </h3>
+                </div>
               </div>
 
               <div className="p-8">
@@ -744,14 +751,13 @@ const MyPass: React.FC = () => {
                   </div>
                 </div>
 
-                <h3 className="text-3xl font-black italic mb-8 tracking-tight uppercase leading-tight text-white">
-                  {'name' in selectedItem ? (selectedItem as any).name : (selectedItem as Activity).title}
-                </h3>
 
                 <div className="mb-8">
                   <h4 className="text-white font-black text-2xl uppercase italic tracking-tighter mb-4 flex items-center gap-3">
                     <span className="w-1.5 h-6 bg-fs-cyan rounded-full" />
-                    {selectedItem.id === 'pb-viking' || selectedItem.id === 'viking-games-sat' ? 'Win Prizes up to P40K' : ('name' in selectedItem ? 'About ' + (selectedItem as any).name : 'About ' + (selectedItem as Activity).title)}
+                    {selectedItem.id === 'pb-viking' || selectedItem.id === 'viking-games-sat' ? 'Win Prizes up to P40K' : 
+                     (selectedItem.id === 'gballers-free' ? 'About G\'League' : 
+                     ('name' in selectedItem ? 'About ' + (selectedItem as any).name : 'About ' + (selectedItem as Activity).title))}
                   </h4>
                   <div className="space-y-6">
                     <p className="text-slate-400 text-sm leading-relaxed italic">
@@ -786,7 +792,7 @@ const MyPass: React.FC = () => {
                   </button>
                 )}
 
-                {(selectedItem.id === 'pb-gballers' || selectedItem.id === 'pb-viking' || selectedItem.id === 'gballers-free' || selectedItem.id === 'viking-games-sat') && (
+                {(selectedItem.id === 'pb-viking' || selectedItem.id === 'gballers-free' || selectedItem.id === 'viking-games-sat') && (
                   <div className="bg-fs-orange/10 rounded-2xl p-6 mb-8 border border-fs-orange/20">
                     <h3 className="text-fs-orange font-black text-xs uppercase tracking-widest mb-3 flex items-center gap-2">
                       <Zap className="w-4 h-4" /> Participation Details

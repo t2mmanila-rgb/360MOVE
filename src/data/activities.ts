@@ -81,7 +81,7 @@ export const MOCK_SCHEDULE: Activity[] = [
   },
   {
     id: 'gballers-free',
-    title: "G'ballers: 3x3 League (Adidas)",
+    title: "G'LEAGUE 3x3 Womens Basketball Tournament",
     category: 'Sports',
     points: 10,
     duration: '5.5 hours',
@@ -482,21 +482,6 @@ export const B2B_PASSPORT_BRANDS: PassportBrand[] = [
     zone: 'PLAY',
     mechanics: 'Approach the "Goodies Discovery Table" and correctly identify one key natural ingredient in a featured Goodies snack bar.',
     points: 1
-  },
-  {
-    id: 'pb-gballers',
-    name: "G'Ballers",
-    category: 'Sports',
-    description: '3x3 League & Basketball Clinic.',
-    booth: 'Court 1',
-    qrSecret: 'GB-2026-33',
-    geofenceRadius: '50m',
-    logo: '/logos/360-logo.png',
-    isCompleted: false,
-    isSignupRequired: true,
-    zone: 'PLAY',
-    mechanics: 'Complete a shooting drill or join a 3x3 scrimmage to unlock your digital badge.',
-    points: 10
   },
   {
     id: 'pb-viking',
