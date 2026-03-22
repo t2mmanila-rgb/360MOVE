@@ -615,6 +615,12 @@ const MyPass: React.FC = () => {
                   <User className="w-4 h-4" /> My Profile
                 </button>
               )}
+              <button 
+                onClick={() => navigate('/events/fitstreet-2026/schedule')}
+                className="w-full bg-white text-slate-900 py-4 rounded-full text-[10px] font-black uppercase tracking-[0.2em] flex items-center justify-center gap-3 shadow-xl border border-slate-100 hover:scale-[1.02] active:scale-[0.98] transition-all mt-1"
+              >
+                Full Schedule <Calendar className="w-4 h-4" />
+              </button>
             </div>
           </div>
 
