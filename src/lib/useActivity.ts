@@ -38,7 +38,8 @@ export const useActivity = () => {
             time: row.time,
             isPaid: row.is_paid,
             location: row.location,
-            description: row.description
+            description: row.description,
+            extendedDescription: row.extended_description
           };
         });
         applyOverrides(overrides);

@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Users, BarChart3, Save, Trash2, Clock, MapPin, ChevronRight,
-  Search, CheckSquare, Square, X, CheckCircle2,
+  Users, BarChart3, Save, Trash2, Clock, Search, CheckSquare, Square, X, CheckCircle2,
   Activity, Target, Zap, Sparkles, Lock, Settings, PieChart, Heart, QrCode,
   Utensils
 } from 'lucide-react';
@@ -275,6 +274,7 @@ const AdminDashboard: React.FC = () => {
         is_paid: !!current.isPaid,
         location: current.location,
         description: current.description,
+        extended_description: current.extendedDescription,
         updated_at: new Date().toISOString()
       });
     } catch (err) {
@@ -518,70 +518,6 @@ const AdminDashboard: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Activity Signup Table */}
-                <div className="bg-white rounded-[4rem] p-12 text-slate-900 shadow-xl border border-slate-100">
-                  <div className="flex items-center justify-between mb-10">
-                    <h3 className="text-3xl font-black italic uppercase tracking-tighter text-slate-900">Activity Signups.</h3>
-                    <div className="px-4 py-1 bg-fs-cyan/10 rounded-full text-[10px] font-black text-fs-cyan uppercase tracking-widest">Live Multi-User Sync</div>
-                  </div>
-                               <div className="flex flex-col gap-4 max-h-[800px] overflow-y-auto pr-4 scrollbar-thin">
-                    {[...schedule, ...programs].sort((a, b) => (stats.activityCounts?.[b.id] || 0) - (stats.activityCounts?.[a.id] || 0)).map((act) => {
-                      const count = stats.activityCounts?.[act.id] || 0;
-                      return (
-                        <div key={act.id} className="bg-slate-50 p-6 rounded-3xl border border-slate-100 hover:border-fs-cyan/30 transition-all flex items-center justify-between group gap-8">
-                          <div className="flex items-center gap-6 flex-1 min-w-0">
-                            <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-200 shrink-0 shadow-lg group-hover:scale-105 transition-transform">
-                              <img src={act.image} alt="" className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-3 mb-1">
-                                <span className="bg-slate-900 text-white text-[8px] font-black px-2 py-0.5 rounded-full uppercase tracking-widest shrink-0">
-                                  {act.zone || 'FITSTREET'}
-                                </span>
-                                <div className="text-sm sm:text-lg font-black text-slate-900 uppercase italic truncate">{act.title}</div>
-                              </div>
-                              <div className="flex items-center gap-4">
-                                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                  <div className="w-1.5 h-1.5 rounded-full bg-fs-cyan" />
-                                  {act.category}
-                                </div>
-                                {act.time && (
-                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                                    <Clock className="w-3 h-3" />
-                                    {act.time}
-                                  </div>
-                                )}
-                                {act.location && (
-                                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5 hidden sm:flex">
-                                    <MapPin className="w-3 h-3" />
-                                    {act.location}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-8 shrink-0">
-                            <div className="flex flex-col items-end">
-                              <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Registrations</div>
-                              <span className={cn(
-                                "text-2xl font-black italic",
-                                count > 0 ? "text-fs-cyan font-black" : "text-slate-200"
-                              )}>
-                                {count.toString().padStart(2, '0')}
-                              </span>
-                            </div>
-                            <button 
-                              onClick={() => setEditingActivity(act)}
-                              className="w-10 h-10 rounded-full bg-white border border-slate-100 flex items-center justify-center hover:bg-slate-900 hover:text-white transition-all shadow-sm"
-                            >
-                              <ChevronRight className="w-5 h-5" />
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
               </div>
             </motion.div>
           )}
@@ -833,9 +769,9 @@ const AdminDashboard: React.FC = () => {
                     <div className="mt-10 space-y-2">
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Extended Description</label>
                       <textarea 
-                        rows={4}
-                        value={overrides[editingActivity.id]?.description ?? editingActivity.description}
-                        onChange={(e) => saveOverride(editingActivity.id, 'description', e.target.value)}
+                        rows={6}
+                        value={overrides[editingActivity.id]?.extendedDescription ?? (editingActivity as any).extendedDescription ?? ''}
+                        onChange={(e) => saveOverride(editingActivity.id, 'extendedDescription', e.target.value)}
                         className="w-full px-8 py-6 bg-slate-50 rounded-[2rem] text-sm font-medium leading-relaxed outline-none focus:ring-2 focus:ring-fs-cyan/20 border-transparent transition-all resize-none"
                       />
                     </div>

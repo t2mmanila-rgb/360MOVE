@@ -1,32 +1,36 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Clock, MapPin, Star, ArrowLeft, Share2, Heart, Zap, ShieldCheck, Sparkles, User } from 'lucide-react';
-import { B2C_PROGRAMS, B2B_PASSPORT_BRANDS, MOCK_SCHEDULE } from '../data/activities';
-import type { Activity, PassportBrand } from '../data/activities';
+import { useActivity } from '../lib/useActivity';
+import type { Activity } from '../data/activities';
 
 const ActivityDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { schedule, programs } = useActivity();
 
-  // Find the actual program from our data, or fallback to mock
-  const activity = useMemo(() => {
-    // Search in all collections
-    const allActivities = [...B2C_PROGRAMS, ...B2B_PASSPORT_BRANDS, ...MOCK_SCHEDULE];
-    const found = allActivities.find(p => p.id === id || ('title' in p && (p as Activity).title?.toLowerCase().replace(/\s+/g, '-') === id) || ('name' in p && (p as PassportBrand).name?.toLowerCase().replace(/\s+/g, '-') === id));
+  // Find the actual program from our merged record
+  const activity = React.useMemo(() => {
+    const allActivities = [...schedule, ...programs];
+    const found = allActivities.find(p => 
+      p.id === id || 
+      p.title?.toLowerCase().replace(/\s+/g, '-') === id
+    );
     
     if (found) {
-      const isBrand = 'booth' in found;
       return {
-        title: ('title' in found ? (found as Activity).title : (found as PassportBrand).name),
+        ...found,
+        title: found.title,
         category: found.category,
-        points: (found as any).points || 1,
-        duration: ('duration' in found ? (found as Activity).duration : 'Visit Booth'),
-        location: (found as any).location || (found as any).booth || 'Fitstreet BGC',
-        instructor: (found as any).instructor || (isBrand ? 'Brand Ambassador' : 'Coach Fai'),
+        points: found.points || 1,
+        duration: found.duration || 'Session',
+        location: found.location || 'Fitstreet BGC',
+        instructor: found.instructor || 'Lead Performance Coach',
         description: found.description,
-        image: (found as any).image || (found as any).logo || '/activities/rope_flow_premium.png',
-        isPaid: (found as any).isPaid ?? false
+        extendedDescription: found.extendedDescription,
+        image: found.image || '/activities/rope_flow_premium.png',
+        isPaid: found.isPaid ?? false
       };
     }
     
@@ -38,11 +42,12 @@ const ActivityDetail: React.FC = () => {
       duration: '60 min',
       location: 'BGC Amphitheater',
       instructor: 'Coach Fai',
-      description: 'Experience a transformative journey that combines physical movement with mindfulness. This session is designed for all levels and focuses on elevating your 360° wellbeing.',
+      description: 'Experience a transformative journey that combines physical movement with mindfulness.',
+      extendedDescription: '',
       image: '/activities/rope_flow_premium.png',
       isPaid: false
     };
-  }, [id]);
+  }, [id, schedule, programs]);
 
   return (
     <div className="bg-white min-h-screen pt-40 pb-56 selection:bg-brand-purple/20">
@@ -98,9 +103,15 @@ const ActivityDetail: React.FC = () => {
                 {activity.title}.
               </h1>
 
-              <div className="prose prose-xl prose-slate max-w-none mb-20 text-slate-500 font-medium leading-relaxed italic">
+              <div className="prose prose-xl prose-slate max-w-none mb-10 text-slate-500 font-medium leading-relaxed italic">
                 "{activity.description}"
               </div>
+
+              {activity.extendedDescription && (
+                <div className="prose prose-lg prose-slate max-w-none mb-20 text-slate-600 font-semibold leading-relaxed border-l-4 border-brand-purple/20 pl-8 py-2">
+                  {activity.extendedDescription}
+                </div>
+              )}
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-12 border-t border-slate-100 pt-16">
                 <div className="flex items-start gap-6">

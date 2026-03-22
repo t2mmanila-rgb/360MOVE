@@ -15,6 +15,7 @@ export interface Activity {
   isPaid?: boolean;
   zone?: 'EAT' | 'PLAY' | 'HEAL' | 'GLOW' | 'THE ARENA';
   mechanics?: string;
+  extendedDescription?: string;
 }
 
 export interface PassportBrand {
