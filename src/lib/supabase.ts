@@ -47,7 +47,25 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      // Robustness: If schema is out of sync (PGRST204), try a minimal upsert
+      if (error.code === 'PGRST204' || error.message.includes('column')) {
+        console.warn('[Supabase] Schema mismatch, retrying minimal sync...', error.message);
+        const minimalData = { ...upsertData };
+        delete minimalData.occupation;
+        delete minimalData.points_profile_completion;
+        
+        const { data: retryData, error: retryError } = await supabase
+          .from('profiles')
+          .upsert(minimalData, { onConflict: 'email' })
+          .select()
+          .single();
+          
+        if (retryError) throw retryError;
+        return retryData;
+      }
+      throw error;
+    }
     
     // Success alert for debugging purposes on mobile - will be removed once confirmed working
     if (typeof window !== 'undefined' && profile.name === 'test1') {
@@ -61,7 +79,13 @@ export const syncProfile = async (profile: any, type: 'generic' | 'fitstreet') =
     
     // Add a temporary alert for debugging on mobile
     if (typeof window !== 'undefined') {
-      alert(`⚠️ SYNC FAILED for ${profile.email}: ${errorMsg}`);
+      // Don't alert for every minor error to avoid spamming the user, 
+      // but do alert for major ones
+      if (errorMsg.includes('PGRST204')) {
+        alert(`⚠️ DATABASE SCHEMA ERROR: Please run the SQL migration I provided to add the 'occupation' column.`);
+      } else {
+        alert(`⚠️ SYNC FAILED for ${profile.email}: ${errorMsg}`);
+      }
     }
     return profile;
   }
